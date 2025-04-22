@@ -1,0 +1,196 @@
+FrameWidgetClass rootFrame {
+ clipchildren 1
+ position 0 0
+ size 1 1
+ halign center_ref
+ valign center_ref
+ hexactpos 0
+ vexactpos 0
+ hexactsize 0
+ vexactsize 0
+ {
+  PanelWidgetClass ZenSleepPanel {
+   ignorepointer 1
+   size 80 100
+   halign right_ref
+   valign bottom_ref
+   hexactpos 1
+   vexactpos 1
+   hexactsize 1
+   vexactsize 1
+   {
+    PanelWidgetClass ZenSleep {
+     clipchildren 1
+     inheritalpha 0
+     position 0 0
+     size 35 81
+     halign right_ref
+     valign center_ref
+     hexactpos 1
+     vexactpos 1
+     hexactsize 1
+     vexactsize 1
+     fixaspect fixwidth
+     style blank
+     {
+      ImageWidgetClass IconZenSleep {
+       disabled 0
+       clipchildren 1
+       inheritalpha 0
+       ignorepointer 0
+       keepsafezone 0
+       color 0.8627 0.8627 0.8627 1
+       position 0.16539 0
+       size 35 35
+       halign center_ref
+       valign center_ref
+       hexactpos 1
+       vexactpos 1
+       hexactsize 1
+       vexactsize 1
+       fixaspect fixwidth
+       image0 "ZenSleep/data/gui/icons/sleeping/icon0.paa"
+       mode blend
+       "src alpha" 1
+       "stretch mode" stretch_w_h
+       "flip u" 0
+       "flip v" 0
+       filter 1
+       nocache 0
+      }
+      ImageWidgetClass ZenSleepArrowUp3 {
+       visible 0
+       clipchildren 1
+       color 0.8627 0.8627 0.8627 1
+       position 0 -27
+       size 22 17
+       halign center_ref
+       valign center_ref
+       hexactpos 1
+       vexactpos 1
+       hexactsize 1
+       vexactsize 1
+       priority 999
+       image0 "set:dayz_gui image:iconArrowUp3"
+       mode blend
+       "src alpha" 1
+       "clamp mode" clamp
+       "flip v" 1
+       filter 1
+       nocache 0
+      }
+      ImageWidgetClass ZenSleepArrowUp2 {
+       visible 0
+       clipchildren 1
+       inheritalpha 0
+       color 0.8627 0.8627 0.8627 1
+       position 0 -25
+       size 22 12
+       halign center_ref
+       valign center_ref
+       hexactpos 1
+       vexactpos 1
+       hexactsize 1
+       vexactsize 1
+       priority 999
+       image0 "set:dayz_gui image:iconArrowUp2"
+       mode blend
+       "src alpha" 1
+       "clamp mode" clamp
+       "flip v" 1
+       filter 1
+       nocache 0
+      }
+      ImageWidgetClass ZenSleepArrowUp1 {
+       visible 0
+       clipchildren 1
+       inheritalpha 0
+       color 0.8627 0.8627 0.8627 1
+       position 0 -22
+       size 22 7
+       halign center_ref
+       valign center_ref
+       hexactpos 1
+       vexactpos 1
+       hexactsize 1
+       vexactsize 1
+       priority 999
+       image0 "set:dayz_gui image:iconArrowUp1"
+       mode blend
+       "src alpha" 1
+       "clamp mode" clamp
+       "flip v" 1
+       filter 1
+       nocache 0
+      }
+      ImageWidgetClass ZenSleepArrowDown1 {
+       visible 0
+       clipchildren 1
+       color 0.8627 0.8627 0.8627 1
+       position 0 22
+       size 22 7
+       halign center_ref
+       valign center_ref
+       hexactpos 1
+       vexactpos 1
+       hexactsize 1
+       vexactsize 1
+       priority 999
+       image0 "set:dayz_gui image:iconArrowUp1"
+       mode blend
+       "src alpha" 1
+       "clamp mode" clamp
+       "flip v" 0
+       filter 1
+       nocache 0
+      }
+      ImageWidgetClass ZenSleepArrowDown2 {
+       visible 0
+       clipchildren 1
+       inheritalpha 0
+       color 0.8627 0.8627 0.8627 1
+       position 0 25
+       size 22 12
+       halign center_ref
+       valign center_ref
+       hexactpos 1
+       vexactpos 1
+       hexactsize 1
+       vexactsize 1
+       priority 999
+       image0 "set:dayz_gui image:iconArrowUp2"
+       mode blend
+       "src alpha" 1
+       "clamp mode" clamp
+       "flip v" 0
+       filter 1
+       nocache 0
+      }
+      ImageWidgetClass ZenSleepArrowDown3 {
+       visible 0
+       clipchildren 1
+       inheritalpha 0
+       color 0.8627 0.8627 0.8627 1
+       position 0 27
+       size 22 17
+       halign center_ref
+       valign center_ref
+       hexactpos 1
+       vexactpos 1
+       hexactsize 1
+       vexactsize 1
+       priority 999
+       image0 "set:dayz_gui image:iconArrowUp3"
+       mode blend
+       "src alpha" 1
+       "clamp mode" clamp
+       "flip v" 0
+       filter 1
+       nocache 0
+      }
+     }
+    }
+   }
+  }
+ }
+}

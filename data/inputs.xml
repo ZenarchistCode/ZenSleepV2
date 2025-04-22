@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<modded_inputs>
+	<inputs>
+		<actions>
+			<input name="UAZenSleep_RefreshConfig" loc="STR_ZenSleep_RefreshConfigText" />
+		</actions>
+		<sorting name="ZEN" loc="ZEN">
+			<input name="UAZenSleep_RefreshConfig"/>
+		</sorting>
+	</inputs>
+    <preset>
+		<input name="UAZenSleep_RefreshConfig">
+            <btn name=""/>
+        </input>
+    </preset>
+</modded_inputs>
