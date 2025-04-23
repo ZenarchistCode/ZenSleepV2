@@ -1,4 +1,3 @@
-#ifdef ZENSLEEP_VPPADMINTOOLS
 #ifdef VPPADMINTOOLS
 
 /*
@@ -155,5 +154,4 @@ modded class PlayerManager
 	}	
 }
 
-#endif
 #endif

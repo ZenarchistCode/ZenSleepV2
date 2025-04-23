@@ -101,11 +101,11 @@ class ZenSleepConfig
 class ZenSleepGeneralConfig
 {
 	float SecondsAsleepUntilFullRestApprox = ZenSleepConstants.FATIGUE_BASE_SECONDS_TIL_RESTED; // How long it takes from zero energy to full rest (WITHOUT any of the below gain multipliers applied)
-	float FreshSpawnFatiguePercent = 90; // % of fatigue a fresh spawn begins with (100% = full rested)
+	float FreshSpawnFatiguePercent = 70; // % of fatigue a fresh spawn begins with (100% = full rested)
 	float MaxFatiguePercentToAllowSleeping = 70; // Maximum % of fatigue to allow sleep (70%+ = full white, 16%+ = white with gap, 6%+ = yellow, 0.02%+ = red, < 0.02% = red flashing)
 	int FatigueLevelToNegativeImpactImmunity = 2; // 0 = full white, 1 = white with a gap, 2 = yellow, 3 = red, 4 = red flashing
 	bool DisplaySleepMessages = true; // Turn on/off the text messages which get sent to players.
-	int PackedBagLifetime = 14400; // Overrides a freshly spawned bag's lifetime, allowing for bag spawns to move around if left untouched until deployed
+	int PackedBagLifetime = 14400; // Overrides a freshly spawned bag's lifetime
 }
 
 class ZenSleepDrainConfig
@@ -127,19 +127,19 @@ class ZenSleepGainConfig
 	float GainBedObjectUsed = 1.3; // 30% sleep speed boost
 	float GainInsideMultiplier = 1.1; // 10% sleep speed boost
 	float GainFromHeatBuffMultiplier = 1.1; // There are 3 stages of heat buffer, 1 = 33% of this value, 2 = 50% of this value, 3 = 100% of this value.
-	float MaxRestGain_Illness = 30; // 30%
+	float MaxRestGain_Illness = 16; // 16% (yellow) max rest
 	float MaxRestGain_Temp_DarkBlueFlashing = 0; // Don't allow sleep
 	float MaxRestGain_Temp_DarkBlue = 0; // Don't allow sleep
-	float MaxRestGain_Temp_LightBlue = 40; // 40%
-	float MaxRestGain_Temp_Yellow = 40; // 40%
+	float MaxRestGain_Temp_LightBlue = 70; // 70% (white with gap)
+	float MaxRestGain_Temp_Yellow = 70; // 70% (white with gap) max rest
 	float MaxRestGain_Temp_Red = 0; // Don't allow sleep
 	float MaxRestGain_Temp_RedFlashing = 0; // Don't allow sleep
-	float MaxRestGain_FoodWater_Yellow = 40; // 40% Max rest possible with yellow food or water
-	float MaxRestGain_FoodWater_Red = 30; // 30% Max rest possible with red food or water
+	float MaxRestGain_FoodWater_Yellow = 16; // 16% (yellow) Max rest possible with yellow food or water
+	float MaxRestGain_FoodWater_Red = 6; // 6% (red) Max rest possible with red food or water
 	float MaxRestGain_FoodWater_RedFlashing = 0; // 0% Max rest possible with red flashing food or water
-	float MaxRestGain_Wet = 20; // 20% Max rest possible when wet
-	float MaxRestGain_Time_Daylight = 70; // 70% Max rest possible during daytime
-	float MaxRestGain_Time_Night = 100; // 100% Max rest possible at night time
+	float MaxRestGain_Wet = 16; // 16% (yellow) Max rest possible when wet
+	float MaxRestGain_Time_Daylight = 70; // 70% (white with gap) Max rest possible during daytime
+	float MaxRestGain_Time_Night = 100; // 100% (full white) Max rest possible at night time
 	float PercentGainedUponUncon = 1; // 1% (approx) Fatigue stat regained if player falls uncon while red or red flashing
 	float BedHeatBuffMaxGain = 10; // 10 = heatbuff stage 1, 30 = stage 3.
 	float BedHealthMaxGain = 100; // Maximum recoverable health when sleeping in a bed/sleeping bag (set to zero to disable)

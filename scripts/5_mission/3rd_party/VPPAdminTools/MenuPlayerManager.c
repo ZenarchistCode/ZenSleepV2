@@ -1,4 +1,3 @@
-#ifdef ZENSLEEP_VPPADMINTOOLS
 #ifdef VPPADMINTOOLS
 
 modded class MenuPlayerManager
@@ -174,5 +173,4 @@ modded class MenuPlayerManager
 	}
 }
 
-#endif
 #endif

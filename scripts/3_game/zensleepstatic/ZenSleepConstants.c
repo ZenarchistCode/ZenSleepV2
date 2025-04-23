@@ -1,10 +1,10 @@
 class ZenSleepConstants
 {
-	static const float SL_FATIGUE_CRITICAL	= 1;				// Red flashing below this fatigue value
-	static const float SL_FATIGUE_LOW		= 300;				// Red below this fatigue value when > critical value
-	static const float SL_FATIGUE_NORMAL	= 800;				// Yellow below this fatigue value when > low value
-	static const float SL_FATIGUE_HIGH		= 3500;				// White with gap below this fatigue value when > normal value
-	static const float SL_FATIGUE_MAX		= 5000;				// Max stat value. Full white below this fatigue value when > high value
+	static const float SL_FATIGUE_CRITICAL	= 1;				// 0.0002%	| Red flashing below this fatigue value
+	static const float SL_FATIGUE_LOW		= 300;				// 6%		| Red below this fatigue value when > critical value
+	static const float SL_FATIGUE_NORMAL	= 800;				// 16%		| Yellow below this fatigue value when > low value
+	static const float SL_FATIGUE_HIGH		= 3500;				// 70%		| White with gap below this fatigue value when > normal value
+	static const float SL_FATIGUE_MAX		= 5000;				// 100%		| Max stat value. Full white below this fatigue value when > high value
 
 	static const float FATIGUE_BASE_SECONDS_TIL_RESTED = 600;	// How many seconds the default config expects to take approximately to reach full rest from zero
 

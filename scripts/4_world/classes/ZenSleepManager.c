@@ -816,14 +816,24 @@ class ZenSleepManager
 		}
 	}
 
-	float FatigueDrainPauseSeconds()
+	float GetFatigueDrainPauseSeconds()
 	{
 		return m_PauseDrainEffectSecs;
 	}
 
 	bool IsFatigueDrainPaused()
 	{
-		return FatigueDrainPauseSeconds() > 0;
+		return GetFatigueDrainPauseSeconds() > 0;
+	}
+
+	float GetInabilityToSleepEffectSecs()
+	{
+		return m_InabilityToSleepEffectSecs;
+	}
+
+	void SetInabilityToSleepEffectSecs(float secs)
+	{
+		m_InabilityToSleepEffectSecs = secs;
 	}
 
 	void SetFatigueSpeedModifier(float modifier)
@@ -846,5 +856,11 @@ class ZenSleepManager
 		return m_FatigueSpeed;
 	}
 
-	// todo: try locking camera like actions when sleeping (eg. drink from well)
+	#ifdef ZENSLEEP_PERSISTENCE
+	void SetPersistenceVariables(float drainEffectSecs, float inabilitySleepSecs)
+	{
+		m_PauseDrainEffectSecs = drainEffectSecs;
+		m_InabilityToSleepEffectSecs = inabilitySleepSecs;
+	}
+	#endif
 }

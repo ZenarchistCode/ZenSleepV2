@@ -185,7 +185,7 @@ modded class PlayerBase
 				float fatigue_normalized = GetStatZenFatigue().Get() / GetStatZenFatigue().GetMax();//added
 				immunity = energy_normalized + water_normalized + health_normalized + blood_normalized + fatigue_normalized;
 				immunity = immunity / 5;//avg 5 instead of vanilla's 4
-				immunity =  Math.Clamp(immunity, 0, 1);
+				immunity = Math.Clamp(immunity, 0, 1);
 			}
 		}
 
@@ -213,7 +213,44 @@ modded class PlayerBase
 				break;
 		}
 	}
-
+	
 	//####################### END OF SERVER-SIDE SYNCING OF FATIGUE ICON STATUS #######################
 	///////////////////////////////////////////////////////////////////////////////////////////////////
+
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// ################################### OPTIONAL EXTRA PERSISTENCE CODE ####################################
+	#ifdef ZENSLEEP_PERSISTENCE
+	protected float m_PauseDrainEffectSecsZS;
+	protected float m_InabilityToSleepEffectSecsZS;
+
+	override void OnStoreSave(ParamsWriteContext ctx)
+	{
+		super.OnStoreSave(ctx);
+
+		if (GetZenSleepManager())
+		{
+			m_PauseDrainEffectSecsZS = GetZenSleepManager().GetFatigueDrainPauseSeconds();
+			m_InabilityToSleepEffectSecsZS = GetZenSleepManager().GetInabilityToSleepEffectSecs();
+		}
+
+		ctx.Write(m_PauseDrainEffectSecsZS);
+		ctx.Write(m_InabilityToSleepEffectSecsZS);
+	}
+
+	override bool OnStoreLoad(ParamsReadContext ctx, int version)
+	{
+		super.OnStoreLoad(ctx, version);
+
+		if (!ctx.Read(m_PauseDrainEffectSecsZS))
+			return false;
+
+		if (!ctx.Read(m_InabilityToSleepEffectSecsZS))
+			return false;
+
+		if (GetZenSleepManager())
+			GetZenSleepManager().SetPersistenceVariables(m_PauseDrainEffectSecsZS, m_InabilityToSleepEffectSecsZS);
+
+		return true;
+	}
+	#endif
 }

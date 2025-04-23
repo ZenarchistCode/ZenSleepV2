@@ -1,4 +1,3 @@
-#ifdef ZENSLEEP_VPPADMINTOOLS
 #ifdef VPPADMINTOOLS
 
 modded class HealPlayerChatModule : ChatCommand
@@ -21,5 +20,4 @@ modded class HealPlayerChatModule : ChatCommand
     }
 }
 
-#endif
 #endif

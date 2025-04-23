@@ -1,4 +1,3 @@
-#ifdef ZENSLEEP_VPPADMINTOOLS
 #ifdef VPPADMINTOOLS
 
 modded class VPPAdminHud
@@ -20,5 +19,4 @@ modded class VPPAdminHud
 	}
 }
 
-#endif
 #endif

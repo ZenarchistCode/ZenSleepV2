@@ -80,6 +80,8 @@ class ZenFatigueNotfr extends NotifierBase
 		debugMsg = debugMsg + " hp=" + m_Player.GetHealth();
 		debugMsg = debugMsg + " tsleep=" + m_Player.GetZenSleepManager().GetSecondsAsleep() + "s";
 		debugMsg = debugMsg + " multi=" + m_Player.GetZenSleepManager().GetFatigueSpeedModifier() + "x";
+		if (m_Player.GetZenSleepManager().GetFatigueDrainPauseSeconds() > 0)
+			debugMsg = debugMsg + " paused=" + m_Player.GetZenSleepManager().GetFatigueDrainPauseSeconds() + " secs";
 
 		ZenSleepFunctions.DebugMessage(debugMsg);
 	}

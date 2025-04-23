@@ -1,4 +1,3 @@
-#ifdef ZENSLEEP_VPPADMINTOOLS
 #ifdef VPPADMINTOOLS
 
 modded class AdminHudSubMenu
@@ -9,5 +8,4 @@ modded class AdminHudSubMenu
 	}
 }
 
-#endif
 #endif

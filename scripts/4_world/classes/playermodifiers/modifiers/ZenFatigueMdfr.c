@@ -36,7 +36,6 @@ class ZenFatigueMdfr extends ModifierBase
 	{
 		if (player.GetZenSleepManager().IsFatigueDrainPaused())
 		{
-			ZenSleepFunctions.DebugMessage("ON DRUGS! - Fatigue drained paused for " + player.GetZenSleepManager().FatigueDrainPauseSeconds() + " seconds.");
 			return;
 		}
 

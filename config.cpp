@@ -4,14 +4,16 @@
 
 	Source code & mod config info available at my GitHub: https://zenarchist.com
 
-	Sweet dreams, survivor.
+	Sweet dreams, survivors.
+
+	Original release date: 23rd April, 2025.
 
 	Credits:
 	Half moon stat icon: https://www.flaticon.com/free-icon/sleep_835605
-	Syberia Project code helped me understand adding custom sleep icon to HUD.
+	Syberia Project code helped me understand how to add custom sleep icon to HUD: https://steamcommunity.com/workshop/filedetails/?id=2569522069
 	Medical Attention Mod for adding the first sleep mod to DayZ: https://steamcommunity.com/sharedfiles/filedetails/?id=2293429999
-	Sleeping Bags: Unfortunately I forgot where I got that model from way back, can't find it anymore online.
-	Stringtable Creator: https://germandayz.gg/filebase/file/81-stringtable-creator/
+	Stringtable Creator for (rough) automatic translations: https://germandayz.gg/filebase/file/81-stringtable-creator/
+	Sleeping Bags: Unfortunately I forgot where I got the model from, can't find it anymore online. My bad - if anyone finds the source let me know.
 */
 
 class CfgPatches
@@ -39,9 +41,9 @@ class CfgMods
 		hideName=1;
 		hidePicture=1;
 		name="ZenSleep";
-		credits=""; 
+		credits="";
 		author="Zenarchist";
-		authorID="0";  
+		authorID="0";
 		version="2.0";
 		extra=0;
 		type="mod";
