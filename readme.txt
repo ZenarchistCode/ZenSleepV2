@@ -66,7 +66,7 @@ The Sleeping Bag items come as a single item which includes a "packed" and "depl
 
 The mod will automatically generate a default server config file in your server's profiles folder (under "profiles/Zenarchist/ZenSleepConfig.json"). If you're not experienced with JSON editing make sure to use this website to double-check the validity of your changes or you run the risk of the server reverting all of your changes to the default values: https://jsonlint.com/
 
-There will be a YouTube video on my channel explaining how the mod works: https://www.youtube.com/@Zenarchist
+There will be a YouTube video on my channel explaining how the mod works: https://youtu.be/7ckS1W7wAq8
 
 And here is a short wiki guide explaining the config etc: https://github.com/ZenarchistCode/ZenModPack/wiki/Zen's-Sleeping-Mod
 
