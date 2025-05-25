@@ -11,6 +11,13 @@ class ZenFatigueNotfr extends NotifierBase
 
 	void ZenFatigueNotfr(NotifiersManager manager)
 	{
+		#ifdef ZENMODPACK
+		if (!ZenModEnabled("ZenSleep"))
+		{
+			return;
+		}
+		#endif
+
 		SetUpFatigueThresholds();
 	}
 
@@ -36,6 +43,13 @@ class ZenFatigueNotfr extends NotifierBase
 	{
 		#ifdef CLIENT 
 		return;
+		#endif
+
+		#ifdef ZENMODPACK
+		if (!ZenModEnabled("ZenSleep"))
+		{
+			return;
+		}
 		#endif
 
 		int tendency = CalculateTendency(delta, INC_TRESHOLD_LOW, INC_TRESHOLD_MED, INC_TRESHOLD_HIGH, DEC_TRESHOLD_LOW, DEC_TRESHOLD_MED, DEC_TRESHOLD_HIGH);
@@ -88,6 +102,13 @@ class ZenFatigueNotfr extends NotifierBase
 
 	override protected float GetObservedValue()
 	{
+		#ifdef ZENMODPACK
+		if (!ZenModEnabled("ZenSleep"))
+		{
+			return 0;
+		}
+		#endif
+
 		return m_Player.GetStatZenFatigue().Get();
 	}
 

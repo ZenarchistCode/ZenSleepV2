@@ -10,6 +10,13 @@ modded class EmoteManager
 	{
 		bool playEmote = super.PlayEmote(id);
 
+		#ifdef ZENMODPACK
+		if (!ZenModEnabled("ZenSleep"))
+		{
+			return playEmote;
+		}
+		#endif
+
 		// If the player has used the lie down emote, prepare for sleep (GetSimulationTimeStamp() >= 300 allows using sleeping emote upon login without triggering sleep fx - used for compatibility with my Immersive Login mod)
 		if (playEmote && id == EmoteConstants.ID_EMOTE_LYINGDOWN && m_Player.GetSimulationTimeStamp() >= 300)
 		{
@@ -28,6 +35,13 @@ modded class EmoteManager
 	{
 		int lastGesture = m_CurrentGestureID;
 		super.OnEmoteEnd();
+
+		#ifdef ZENMODPACK
+		if (!ZenModEnabled("ZenSleep"))
+		{
+			return;
+		}
+		#endif
 
 		if (lastGesture == EmoteConstants.ID_EMOTE_LYINGDOWN)
 		{

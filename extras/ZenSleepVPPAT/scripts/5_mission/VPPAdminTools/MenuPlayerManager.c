@@ -1,5 +1,3 @@
-#ifdef VPPADMINTOOLS
-
 modded class MenuPlayerManager
 {
 	SliderWidget m_SliderZenSleep;
@@ -172,5 +170,3 @@ modded class MenuPlayerManager
 		}
 	}
 }
-
-#endif

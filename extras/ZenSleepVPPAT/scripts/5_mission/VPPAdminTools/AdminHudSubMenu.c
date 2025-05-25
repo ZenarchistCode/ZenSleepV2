@@ -1,5 +1,3 @@
-#ifdef VPPADMINTOOLS
-
 modded class AdminHudSubMenu
 {
 	void OnCreateZenSleep(Widget RootW)
@@ -7,5 +5,3 @@ modded class AdminHudSubMenu
 		m_RootWidget = RootW;
 	}
 }
-
-#endif

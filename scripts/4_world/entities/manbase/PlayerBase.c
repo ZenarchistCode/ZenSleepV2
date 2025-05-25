@@ -30,6 +30,13 @@ modded class PlayerBase
 
 	void SetZenSleepFxID(int id)
 	{
+		#ifdef ZENMODPACK
+		if (!ZenModEnabled("ZenSleep"))
+		{
+			return;
+		}
+		#endif
+
 		m_ZenSleepFxID = id;
 
 		if (!GetGame().IsDedicatedServer())
@@ -64,6 +71,13 @@ modded class PlayerBase
 	{
 		bool superConsume = super.Consume(data);
 
+		#ifdef ZENMODPACK
+		if (!ZenModEnabled("ZenSleep"))
+		{
+			return superConsume;
+		}
+		#endif
+
 		if (GetGame().IsDedicatedServer())
 			GetZenSleepManager().Consume(data);
 
@@ -73,6 +87,13 @@ modded class PlayerBase
 	override void OnUnconsciousStop(int pCurrentCommandID)
 	{
 		super.OnUnconsciousStop(pCurrentCommandID);
+
+		#ifdef ZENMODPACK
+		if (!ZenModEnabled("ZenSleep"))
+		{
+			return;
+		}
+		#endif
 
 		if (!GetGame().IsDedicatedServer())
 			return;
@@ -96,6 +117,13 @@ modded class PlayerBase
 	{
 		super.OnScheduledTick(deltaTime);
 
+		#ifdef ZENMODPACK
+		if (!ZenModEnabled("ZenSleep"))
+		{
+			return;
+		}
+		#endif
+
 		if (GetZenSleepManager())
 			GetZenSleepManager().OnUpdateTickShared(deltaTime);
 	}
@@ -113,7 +141,9 @@ modded class PlayerBase
 				GetZenSleepManager().GetVisualEffectHandlerClient().SetFxID(m_ZenSleepFxID);
 
 			if (m_SoundEffectHandlerClient)
+			{
 				m_SoundEffectHandlerClient.PlaySoundEffect(m_ZenSleepFxID);
+			}
 
 			m_ZenSleepFxID = -1;
 		}
@@ -156,6 +186,11 @@ modded class PlayerBase
 
 	EStatLevels GetStatLevelZenFatigue()
 	{
+		#ifdef ZENMODPACK
+		if (!ZenModEnabled("ZenSleep") || !GetStatZenFatigue())
+			return ZenSleepConstants.SL_FATIGUE_HIGH; // To be safe, always return high when not enabled so any debuffs are not applied.
+		#endif
+
 		float fatigue = GetStatZenFatigue().Get();
 		return GetStatLevel(fatigue, ZenSleepConstants.SL_FATIGUE_CRITICAL, ZenSleepConstants.SL_FATIGUE_LOW, ZenSleepConstants.SL_FATIGUE_NORMAL, ZenSleepConstants.SL_FATIGUE_HIGH);
 	}
@@ -170,6 +205,14 @@ modded class PlayerBase
 	override float GetImmunity()
 	{
 		float vanillaImmunity = super.GetImmunity();
+
+		#ifdef ZENMODPACK
+		if (!ZenModEnabled("ZenSleep"))
+		{
+			return vanillaImmunity;
+		}
+		#endif
+
 		float immunity = vanillaImmunity;
 
 		if (GetStatLevelZenFatigue() >= GetZenSleepConfig().GeneralConfig.FatigueLevelToNegativeImpactImmunity)

@@ -1,5 +1,3 @@
-#ifdef VPPADMINTOOLS
-
 /*
 	Override some VPPAdminTools code to enable compatibility with my sleep mod fatigue stat. 
 	This is all copy & paste code with just some additions.
@@ -153,5 +151,3 @@ modded class PlayerManager
 		}
 	}	
 }
-
-#endif

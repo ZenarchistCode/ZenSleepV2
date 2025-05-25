@@ -5,6 +5,13 @@ modded class InjuryAnimationHandler
 	{
 		eInjuryHandlerLevels vanillaResult = super.GetInjuryLevel(health);
 
+		#ifdef ZENMODPACK
+		if (!ZenModEnabled("ZenSleep"))
+		{
+			return vanillaResult;
+		}
+		#endif
+
 		if (m_Player.GetStatLevelZenFatigue() >= EStatLevels.LOW && m_Player.GetZenSleepManager().GetSleepCondition() != ZenSleepState.ON_DRUGS)
 		{
 			eInjuryHandlerLevels vanillaOverrideResult = 0;

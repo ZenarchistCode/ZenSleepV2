@@ -1,6 +1,4 @@
-#ifdef VPPADMINTOOLS
-
-modded class HealPlayerChatModule : ChatCommand
+modded class HealPlayerChatModule
 {
     override void ExecuteCommand(PlayerBase caller, array<Man> targets, array<string> args)
     {
@@ -19,5 +17,3 @@ modded class HealPlayerChatModule : ChatCommand
         }
     }
 }
-
-#endif

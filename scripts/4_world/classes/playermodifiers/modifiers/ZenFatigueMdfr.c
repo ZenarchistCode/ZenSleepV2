@@ -18,6 +18,11 @@ class ZenFatigueMdfr extends ModifierBase
 	
 	override bool ActivateCondition(PlayerBase player)
 	{
+		#ifdef ZENMODPACK
+		if (!ZenModEnabled("ZenSleep"))
+			return false;
+		#endif
+
 		#ifdef ENFUSION_AI_PROJECT
 		// Robots don't sleep
 		if (player.IsAI())

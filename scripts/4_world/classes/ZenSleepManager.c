@@ -1,3 +1,4 @@
+
 // Most of this class is server-side stuff. Manages general sleep-related mechanics.
 // I moved it out of PlayerBase.c to avoid clutter in that class as most of this stuff
 // doesn't really need to be in there. Inspired by vanilla processes like EmoteManager/BleedingSourcesManager etc.
@@ -52,7 +53,7 @@ class ZenSleepManager
 
 		#ifdef ENFUSION_AI_PROJECT
 		// Robots don't sleep
-		m_IsPlayerAI = true;
+		m_IsPlayerAI = m_Player.IsAI();
 		#else
 		m_IsPlayerAI = false;
 		#endif
@@ -256,6 +257,11 @@ class ZenSleepManager
 
 	bool CanSleepOnBedObject(Object object)
 	{
+		#ifdef ZENMODPACK
+		if (!ZenModEnabled("ZenSleep"))
+			return false;
+		#endif
+
 		foreach (string s : GetZenSleepConfig().ClientEffectsConfig.BedObjects)
 		{
 			if (object.IsKindOf(s))
@@ -481,8 +487,13 @@ class ZenSleepManager
 
 	void SendVanillaSleepSoundEventID(int id)
 	{
-		if (id > 0 && id < EPlayerSoundEventID.ENUM_COUNT)
-			m_Player.SetZenSleepFxID(ZenSleepFunctions.GetPackedIntegerData4(0, 0, 0, id));
+		if (id < 0 || id > (EPlayerSoundEventID.ENUM_COUNT - 1))
+		{
+			Error("[ZenSleepManager] Send vanilla sleep sound enum ID out of bounds = " + id);
+			return;
+		}
+
+		m_Player.SetZenSleepFxID(ZenSleepFunctions.GetPackedIntegerData4(0, 0, 0, id));
 	}
 
 	// This method will check all the possible ways we can be woken up.

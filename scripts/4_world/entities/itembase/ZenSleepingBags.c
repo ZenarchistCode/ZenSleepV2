@@ -57,6 +57,7 @@ class ZenSleepingBag_Base extends ItemBase
 				if (m_ZenBagClutterCutter)
 				{
 					m_ZenBagClutterCutter.SetOrientation(GetOrientation());
+					ZenSleepFunctions.AlignToTerrain(m_ZenBagClutterCutter);
 				}
 			}
 		}

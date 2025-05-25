@@ -5,6 +5,13 @@ modded class ActionTargetsCursor
 	{
 		super.Update();
 
+		#ifdef ZENMODPACK
+		if (!ZenModEnabled("ZenSleep"))
+		{
+			return;
+		}
+		#endif
+
 		if (m_Player && m_Player.GetZenSleepManager().IsLyingDown())
 		{
 			m_Hidden = true;

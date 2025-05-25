@@ -4,6 +4,13 @@ modded class MissionGameplay
 	{
 		super.OnUpdate(timeslice);
 
+		#ifdef ZENMODPACK
+		if (!ZenModEnabled("ZenSleep"))
+		{
+			return;
+		}
+		#endif
+
 		PlayerBase player = PlayerBase.Cast(GetGame().GetPlayer());
 		Input gameInput = Input.Cast(GetGame().GetInput());
 

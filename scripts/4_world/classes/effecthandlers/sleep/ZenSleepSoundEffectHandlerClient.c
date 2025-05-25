@@ -23,6 +23,12 @@ class ZenSleepSoundEffectHandlerClient extends ZenSleepEffectHandlerBase
 
 		if (vanillaSoundEventID > 0)
 		{
+			if (vanillaSoundEventID < 0 || vanillaSoundEventID > (EPlayerSoundEventID.ENUM_COUNT - 1))
+			{
+				Error("EPlayerSoundEventID out of bounds: " + vanillaSoundEventID);
+				return;
+			}
+
 			m_Player.PlaySoundEventEx(vanillaSoundEventID, false, EPlayerSoundEventParam.HIGHEST_PRIORITY);
 		}
 

@@ -7,11 +7,30 @@ modded class IngameHud
 	{
 		super.InitBadgesAndNotifiers();
 
-		CreateZenSleepIcon();
+		RegisterZenSleepIcon();
 	}
 
-	protected void CreateZenSleepIcon()
+	protected void RegisterZenSleepIcon()
 	{
+		// Widget arrays are cleared on respawn so re-set my modded values on creation AND after respawn.
+		if (m_ZenSleepIcon)
+		{
+			m_StatesWidgets.Set(ZenSleepEnums.NTFKEY_FATIGUE, m_ZenSleepIcon);
+			m_StatesWidgetNames.Set(ZenSleepEnums.NTFKEY_FATIGUE, "ZenSleep");
+		}
+	}
+
+	override void Update(float timeslice)
+	{
+		super.Update(timeslice);
+
+		#ifdef ZENMODPACK
+		if (!ZenModEnabled("ZenSleep"))
+		{
+			return;
+		}
+		#endif
+
 		// Only need to create the icon once, this method also gets re-called when a player respawns.
 		if (!m_HasInitZenSleep)
 		{
@@ -54,17 +73,10 @@ modded class IngameHud
 				m_ZenSleepIcon.LoadImageFile(i, "ZenSleep/data/gui/icons/sleeping/icon" + i + ".paa");
 			}
 
+			RegisterZenSleepIcon();
+
 			m_HasInitZenSleep = true; // Don't need to load this badge widget again.
 		}
-
-		// Widget arrays are cleared on respawn so re-set my modded values on creation AND after respawn.
-		m_StatesWidgets.Set(ZenSleepEnums.NTFKEY_FATIGUE, m_ZenSleepIcon);
-		m_StatesWidgetNames.Set(ZenSleepEnums.NTFKEY_FATIGUE, "ZenSleep");
-	}
-
-	override void Update(float timeslice)
-	{
-		super.Update(timeslice);
 
 		PlayerBase player = PlayerBase.Cast(GetGame().GetPlayer());
 		if (player)

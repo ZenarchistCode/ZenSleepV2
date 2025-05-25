@@ -53,7 +53,7 @@ class ZenSleepConfig
 		ClientEffectsConfig		= new ZenSleepEffectsClientConfig();
 		DebugMode				= false;
 		AdminIDs				= new array<string>;
-		AdminIDs.Insert("Your_Steam_ID");
+		AdminIDs.Insert("www.steamidfinder.com");
 
 		Save();
 	}
@@ -108,18 +108,6 @@ class ZenSleepGeneralConfig
 	int PackedBagLifetime = 14400; // Overrides a freshly spawned bag's lifetime
 }
 
-class ZenSleepDrainConfig
-{
-	float GlobalDrainMultiplier = 1.0; // Speeds up/slows down all fatigue drainers
-	float DrainHeavyItemMultiplier = 1.0; // How much faster/slower to drain while carrying heavy item (eg. barrel)
-	float DrainWalkingMultiplier = 1.0; // Walking speed drain multiplier
-	float DrainJoggingMultiplier = 1.0; // Jogging speed drain (ie. normal W with no CTRL or shift pressed)
-	float DrainSprintingMultiplier = 1.0; // Full-sprint drain
-	float DrainWeightMultiplier = 1.0; // How much player weight affects drain (as a % of the stamina bar - the lower the stamina bar, the higher this multiplier is applied)
-	float DrainNightMultiplier = 1.5; // How much faster fatigue drains when the world is night time
-	float HealthLossPerSecRedFlashing = 0; // No health damage for zero fatigue left by default.
-}
-
 class ZenSleepGainConfig
 {
 	float GlobalGainMultiplier = 1.0; // Speeds up/slows down all fatigue gainers
@@ -146,6 +134,18 @@ class ZenSleepGainConfig
 	float BedHealthGainPerSec = 0.25; // Health gain per second while sleeping in bed
 	float MinSecsAsleepInBedToTriggerImmunityBoost = 120; // Minimum seconds player needs to sleep to receive 5 minute immunity boost (set to zero to disable)
 	float MinSecsAsleepToTriggerHealthRecovery = 120; // Minimum seconds player needs to sleep to begin regaining health (if enabled)
+}
+
+class ZenSleepDrainConfig
+{
+	float GlobalDrainMultiplier = 1.0; // Speeds up/slows down all fatigue drainers
+	float DrainHeavyItemMultiplier = 1.0; // How much faster/slower to drain while carrying heavy item (eg. barrel)
+	float DrainWalkingMultiplier = 1.0; // Walking speed drain multiplier
+	float DrainJoggingMultiplier = 1.0; // Jogging speed drain (ie. normal W with no CTRL or shift pressed)
+	float DrainSprintingMultiplier = 1.0; // Full-sprint drain
+	float DrainWeightMultiplier = 1.0; // How much player weight affects drain (as a % of the stamina bar - the lower the stamina bar, the higher this multiplier is applied)
+	float DrainNightMultiplier = 1.5; // How much faster fatigue drains when the world is night time
+	float HealthLossPerSecRedFlashing = 0; // No health damage for zero fatigue left by default.
 }
 
 class ZenSleepEffectsServerConfig
@@ -179,7 +179,7 @@ class ZenSleepEffectsClientConfig
 	float AmountToBlurWhenRed = 1; // Amount to blur the screen when red flashing fatigue (1% = extremely subtle)
 	float AmountToVignetteWhenRedFlashing = 50; // Amount to apply blackened corners of screen when red flashing fatigue (takes ~5 minutes at red flashing to reach this value)
 	float AmountToVignetteWhenRed = 25; // Amount to apply blackened corners of screen when red fatigue (takes ~5 minutes at red to reach this value)
-	float DelaySecsUntilAudioAttenuation = 60; // How long to wait after lying down to sleep before engaging sleep attenuation
+	float DelaySecsUntilAudioAttenuation = 60; // How long to wait after lying down to sleep before engaging sleep attenuation (set to zero to disable)
 	bool AllowInventoryWhileSleeping = true; // Allow player to access their inventory while sleeping (can't drop or use any items in hands)
 	bool AllowClosedEyesEffectSleeping = true; // Enables the "closing eyes" effect
 	bool AllowHallucinationEffectRedFlashing = true; // Enables the chroma hallucination effect when yawning while red flashing

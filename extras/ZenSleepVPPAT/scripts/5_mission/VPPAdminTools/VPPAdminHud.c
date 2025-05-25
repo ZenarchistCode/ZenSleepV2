@@ -1,9 +1,15 @@
-#ifdef VPPADMINTOOLS
-
 modded class VPPAdminHud
 {
 	override void CreateSubMenu(typename subMenuType)
 	{
+		#ifdef ZENMODPACK
+		if (!ZenModEnabled("ZenSleep"))
+		{
+			super.CreateSubMenu(subMenuType);
+			return;
+		}
+		#endif
+
 		if (GetSubMenuByType(subMenuType) == NULL)
 		{
 			AdminHudSubMenu menu = AdminHudSubMenu.Cast(subMenuType.Spawn());
@@ -18,5 +24,3 @@ modded class VPPAdminHud
 		}
 	}
 }
-
-#endif

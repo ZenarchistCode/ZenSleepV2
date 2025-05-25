@@ -9,6 +9,11 @@ modded class PlayerStatsPCO_current
 	{
 		super.Init();
 
+		#ifdef ZENMODPACK
+		if (!GetGame().IsDedicatedServer() || !ZenModEnabled("ZenSleep"))
+			return;
+		#endif
+
 		RegisterStat(ZenSleepEnums.STAT_FATIGUE, new PlayerStat<float>(0, ZenSleepConstants.SL_FATIGUE_MAX, ZenSleepConstants.SL_FATIGUE_MAX, "ZenSleep", EPSstatsFlags.EMPTY));
 	}
 }

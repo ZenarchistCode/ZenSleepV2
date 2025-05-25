@@ -1,4 +1,4 @@
-What Is This?
+[h1]What Is This?[/h1]
 
 This mod adds an immersive sleeping fatigue stat to the game.
 
@@ -33,30 +33,20 @@ Here are some examples of how the mod works and why it's immersive (most of thes
 - This mod gives players a reason to chill from time to time, make a campfire, and enjoy the ambience
 - Trying to sleep while cold, wet, sick, hungry, thirsty, or during the day will limit their max rest
 - The player's activity level affects the speed which they drain their fatigue stat at over time
-- Carrying heavy weight, heavy two-handed items, sprinting etc will drain significantly faster
 - The player has about 5 hours of full rest time as a freshy (can be configured to be more/less)
 - During the night fatigue drains 50% faster when active, but also recovers 50% faster when sleeping
-- Sleeping will slowly close the player's eyes and eventually attenuate their audio as they drift off
-- Getting injured by players, zombies or animals while sleeping will wake the player up immediately
 - Getting injured will cause the player to be unable to sleep for some time due to adrenaline
 - Drinking sugary drinks like soda cans will increase their fatigue stat (fully configurable)
-- Taking epinephrine injections will pause draining of the sleep stat for several minutes
-- If the player is affected by epi or other drugs they will be unable to sleep for a while
 - Custom items (anesthetic and amphetamine injectors) boost/reduce the fatigue stat significantly
 - Sleeping in a sleeping bag or tent will maintain a small heat buff to avoid illness in the cold
 - Sleeping inside a building and ideally with a heat source nearby will speed up resting
 - Sleeping bags can be carried on the backpack tool slot and can be repaired if damaged
-- Sleeping bags can become wet and will not give benefits, but can be wrung out like clothes
 - When the player yawns sometimes their screen will produce a chroma hallucination effect
-- The more tired the player is the more likely this visual effect will be triggered
-- If a player is very tired their screen can blur very slightly making sniping etc harder
 - The player makes sounds while sleeping which can be heard by attentive players nearby
-- Admins can enable/disable the possibility of falling asleep while driving/swimming
 - The mod was made to be as efficient as possible with server FPS and netcode
-- I'm pleased to say the mod *currently* produces zero error logs on server or client
 - VPPAdminTools compatibility is included for debugging and admin configuration
 
-Installation Instructions:
+[h1]Installation Instructions:[/h1]
 
 Install this mod like any other mod (there are many guides out there) - copy it into your server folder and add it to your server mods list. It must be run on both server and client. Make sure to copy the .bikey into your server keys.
 
@@ -70,13 +60,13 @@ There will be a YouTube video on my channel explaining how the mod works: https:
 
 And here is a short wiki guide explaining the config etc: https://github.com/ZenarchistCode/ZenModPack/wiki/Zen's-Sleeping-Mod
 
-You DO NOT need to wipe your server to add or remove this mod (according to my limited testing). But make sure to back up your server files before adding or wiping just to be safe, as there may be edge cases I didn't experience where database corruption can occur.
+You DO need to wipe your server to add or remove this mod because otherwise your player profiles will become corrupted due to the new sleep stat.
 
 This mod requires Community Framework to function (https://steamcommunity.com/workshop/filedetails/?id=1559212036)
 
 There is an optional persistence-related PBO file in the "ZenSleep/extras/defines" mod folder (for advanced server admins/modders only) - a readme file is included in that folder to explain what it does.
 
-Credit:
+[h1]Credit:[/h1]
 
 Obviously the original sleeping mod included in Medical Attention is a huge inspiration for this mod: https://steamcommunity.com/sharedfiles/filedetails/?id=2293429999
 
@@ -86,11 +76,11 @@ I've learned a ton from DayZ modding communities, particularly the Enfusion Modd
 
 My DayZ modding buddy SpaceCat (https://steamcommunity.com/id/spacecatboy/myworkshopfiles/?appid=221100) has taught me some important debug tricks and best practices which has no doubt led to improved stability/crash-proofness for this mod and my other recent mods.
 
-Repack & Source Code:
+[h1]Repack & Source Code:[/h1]
 
 You can repack this mod if you like, and do anything else you want with it for that matter. Just keep in mind my future updates won't be applied so make sure to check back for new versions if you notice any bugs. The source code is on my GitHub at www.zenarchist.io
 
-Buy Me A Coffee:
+[h1]Buy Me A Coffee:[/h1]
 
 All my mods are free and open source, but it takes an enormous amount of time to put some of these mods together. If I've helped you out, please consider helping me buy my next coffee! I don't expect it, but I very much appreciate it.
 
