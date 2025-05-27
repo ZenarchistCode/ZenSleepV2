@@ -1,22 +1,23 @@
 modded class Hologram
 {
-    override void SetAnimations()
-	{
-        super.SetAnimations();
-
-        ZenSleepingBag_Base sleepingBag = ZenSleepingBag_Base.Cast(m_Projection);
-        if (sleepingBag)
+    override string ProjectionBasedOnParent()
+    {
+        //! SLEEPING BAGS 
+        if (m_Parent.IsKindOf("ZenSleepingBag_Base"))
         {
-            sleepingBag.SetZenSleepingBagDeployed(true);
+            string newType = m_Parent.GetType();
+            return newType + "_Deployed";
         }
-	}
+
+        return super.ProjectionBasedOnParent();
+    }
 
     override void RefreshVisual()
 	{
         super.RefreshVisual();
 
-		// Couldn't figure out how to use animations and rvmats like vanilla deployables, so have to do this to apply my hidden selections approach instead
-        ZenSleepingBag_Base sleepingBag = ZenSleepingBag_Base.Cast(m_Projection);
+        // Hacky but whatever.
+		ZenSleepingBag_Base sleepingBag = ZenSleepingBag_Base.Cast(m_Projection);
         if (sleepingBag)
         {
             bool cantDeploy = IsColliding() || IsFloating();
@@ -26,13 +27,10 @@ modded class Hologram
 
     override EntityAI PlaceEntity(EntityAI entity_for_placing)
     {
-        //! SLEEPING BAG
         if (m_Parent != NULL && m_Parent.IsInherited(ZenSleepingBag_Base) && m_Projection != NULL)
         {
-            // Get bag
-            ZenSleepingBag_Base bag = ZenSleepingBag_Base.Cast(m_Parent);
-            bag.SetZenSleepingBagDeployed(true);
-            return bag;
+            // Don't let vanilla do this, it's handled internally instead by ZenSleepingBag_Base.c
+            return NULL;
         }
 
         return super.PlaceEntity(entity_for_placing);

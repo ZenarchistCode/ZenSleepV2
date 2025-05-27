@@ -7,6 +7,8 @@ class ZenSleepEffectHandlerBase extends Managed
 		m_Player = player; 
 
 		Init();
+
+		Print("[ZenSleep::" + ClassName() + "] Initialized " + m_Player.GetCachedID());
 	}
 
 	void Init();

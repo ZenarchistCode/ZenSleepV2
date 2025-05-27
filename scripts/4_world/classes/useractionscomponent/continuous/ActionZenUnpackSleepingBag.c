@@ -11,7 +11,10 @@ class ActionZenUnpackSleepingBag : ActionDeployObject
 
         if (GetGame().IsDedicatedServer())
 		{
-			action_data.m_MainItem.StartItemSoundServer(SoundConstants.ITEM_DEPLOY);
+			if (action_data.m_MainItem)
+			{
+				action_data.m_MainItem.StartItemSoundServer(SoundConstants.ITEM_DEPLOY);
+			}
 		}
     }
 	
@@ -21,7 +24,10 @@ class ActionZenUnpackSleepingBag : ActionDeployObject
 
         if (GetGame().IsDedicatedServer())
 		{
-			action_data.m_MainItem.StopItemSoundServer(SoundConstants.ITEM_DEPLOY);
+			if (action_data.m_MainItem)
+			{
+				action_data.m_MainItem.StopItemSoundServer(SoundConstants.ITEM_DEPLOY);
+			}
 		}
     }
 }

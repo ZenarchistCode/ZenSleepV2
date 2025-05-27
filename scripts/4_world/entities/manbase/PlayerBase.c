@@ -14,13 +14,19 @@ modded class PlayerBase
 	{
 		super.Init();
 
+		// Used for triggering sleep sound & visual FX sync.
+		RegisterNetSyncVariableInt("m_ZenSleepFxID");
+	}
+
+	override void DeferredInit()
+	{
+		super.DeferredInit();
+
+		// Register these here on delayed Init so playerbase has completed init first.
 		m_ZenSleepManager = new ZenSleepManager(this);
 
 		if (GetGame().IsClient())
 			m_SoundEffectHandlerClient = new ZenSleepSoundEffectHandlerClient(this);
-
-		// Used for triggering sleep sound & visual FX sync.
-		RegisterNetSyncVariableInt("m_ZenSleepFxID");
 	}
 
 	ZenSleepManager GetZenSleepManager()

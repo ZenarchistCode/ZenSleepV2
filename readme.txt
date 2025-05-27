@@ -52,8 +52,6 @@ Install this mod like any other mod (there are many guides out there) - copy it 
 
 Also don't forget to copy over the types.xml from inside the "extras" folder into your server types if you want to add the custom items to your loot table (optional). You can either import my types.xml separately (here's a guide: https://www.youtube.com/watch?v=PAAEhdiQ_vE) - OR just carefully merge my types with the vanilla types ensuring you don't break the XML structure in the process.
 
-The Sleeping Bag items come as a single item which includes a "packed" and "deployed" state (much like vanilla tents). The types.xml data you specify is for the "packed" version spawns and the "deployed" version's lifetime. When the bag spawns it spawns as packed, so the spawn config tells the game where to create them. The packed version's item lifetime can be overwriten in the JSON config. This allows the "packed" version to despawn faster, while the deployed version can stay persistent. With the default config deployed bags have a persistence of 1 week if left untouched, while packed bags have a persistence of 4 hours if untouched.
-
 The mod will automatically generate a default server config file in your server's profiles folder (under "profiles/Zenarchist/ZenSleepConfig.json"). If you're not experienced with JSON editing make sure to use this website to double-check the validity of your changes or you run the risk of the server reverting all of your changes to the default values: https://jsonlint.com/
 
 There will be a YouTube video on my channel explaining how the mod works: https://youtu.be/7ckS1W7wAq8

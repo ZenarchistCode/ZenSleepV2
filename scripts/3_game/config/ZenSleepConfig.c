@@ -5,7 +5,7 @@ class ZenSleepConfig
 	const static string ZEN_MOD_CFG_FILE		= "ZenSleepConfig.json";
 	
 	// Version
-	static const string CONFIG_VERSION = "1.0";
+	static const string CONFIG_VERSION = "Updated 27th May 2025";
 	string ConfigVersion;
 
 	// Non-serialized admin status for clients 
@@ -38,7 +38,7 @@ class ZenSleepConfig
 			}
 			else
 			{
-				// Config exists and version matches, stop here.
+				// Config exists and version matches, stop here. Re-save to add/remove any config changes to structure.
 				return;
 			}
 		}
@@ -105,7 +105,6 @@ class ZenSleepGeneralConfig
 	float MaxFatiguePercentToAllowSleeping = 70; // Maximum % of fatigue to allow sleep (70%+ = full white, 16%+ = white with gap, 6%+ = yellow, 0.02%+ = red, < 0.02% = red flashing)
 	int FatigueLevelToNegativeImpactImmunity = 2; // 0 = full white, 1 = white with a gap, 2 = yellow, 3 = red, 4 = red flashing
 	bool DisplaySleepMessages = true; // Turn on/off the text messages which get sent to players.
-	int PackedBagLifetime = 14400; // Overrides a freshly spawned bag's lifetime
 }
 
 class ZenSleepGainConfig
@@ -193,7 +192,7 @@ class ZenSleepEffectsClientConfig
 		BedObjects = new array<string>;
 		BedObjects.Insert("MediumTent");
 		BedObjects.Insert("LargeTent");
-		BedObjects.Insert("ZenSleepingBag_Base");
+		BedObjects.Insert("ZenSleepingBagDeployed_Base");
 		BedObjects.Insert("ZenSleepingBagStatic_Base");
 	}
 }

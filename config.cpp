@@ -92,6 +92,7 @@ class CfgVehicles
 	class Inventory_Base;
 	class HouseNoDestruct;
 
+	//! PACKED
 	class ZenSleepingBag_Base: Inventory_Base
 	{
 		scope=1;
@@ -99,15 +100,9 @@ class CfgVehicles
 		descriptionShort="$STR_CfgVehicles_ZenSleepingBag1";
 		model="ZenSleep\data\models\sleepingbags\sleepingbag.p3d";
 		soundImpactType="textile";
-		simpleHiddenSelections[]= 
-		{
-			"packed",
-			"deployed"
-	    };
 		hiddenSelections[]=
 		{
-			"packed_texture",
-			"deployed"
+			"packed"
 		};
 		inventorySlot[] =
 		{
@@ -122,6 +117,124 @@ class CfgVehicles
 		repairCosts[] = { 30,25 };
 		itemBehaviour=2;
 		rotationFlags=16;
+		class DamageSystem
+		{
+			class GlobalHealth
+			{
+				class Health
+				{
+					hitpoints=250;
+					healthLevels[]=
+					{
+						
+						{
+							1,
+							
+							{
+								"ZenSleep\data\textures\sleepingbags\sleepingbag_packed.rvmat"
+							}
+						},
+						
+						{
+							0.69999999,
+							
+							{
+								"ZenSleep\data\textures\sleepingbags\sleepingbag_packed.rvmat"
+							}
+						},
+						
+						{
+							0.5,
+							
+							{
+								"ZenSleep\data\textures\sleepingbags\sleepingbag_packed_damage.rvmat"
+							}
+						},
+						
+						{
+							0.30000001,
+							
+							{
+								"ZenSleep\data\textures\sleepingbags\sleepingbag_packed_damage.rvmat"
+							}
+						},
+						
+						{
+							0,
+							
+							{
+								"ZenSleep\data\textures\sleepingbags\sleepingbag_packed_destruct.rvmat"
+							}
+						}
+					};
+				};
+			};
+		};
+	};
+	class ZenSleepingBag_Black : ZenSleepingBag_Base
+	{
+		scope=2;
+		hiddenSelectionsTextures[]=
+		{
+			"ZenSleep\data\textures\sleepingbags\sleepingbag_packed_black_co.paa"
+		};
+	};
+	class ZenSleepingBag_Blue : ZenSleepingBag_Base
+	{
+		scope=2;
+		hiddenSelectionsTextures[]=
+		{
+			"ZenSleep\data\textures\sleepingbags\sleepingbag_packed_blue_co.paa"
+		};
+	};
+	class ZenSleepingBag_Green : ZenSleepingBag_Base
+	{
+		scope=2;
+		hiddenSelectionsTextures[]=
+		{
+			"ZenSleep\data\textures\sleepingbags\sleepingbag_packed_green_co.paa"
+		};
+	};
+	class ZenSleepingBag_Grey : ZenSleepingBag_Base
+	{
+		scope=2;
+		hiddenSelectionsTextures[]=
+		{
+			"ZenSleep\data\textures\sleepingbags\sleepingbag_packed_grey_co.paa"
+		};
+	};
+	class ZenSleepingBag_Red : ZenSleepingBag_Base
+	{
+		scope=2;
+		hiddenSelectionsTextures[]=
+		{
+			"ZenSleep\data\textures\sleepingbags\sleepingbag_packed_red_co.paa"
+		};
+	};
+
+	//! DEPLOYED
+	class ZenSleepingBagDeployed_Base: Inventory_Base
+	{
+		scope=1;
+		displayName="$STR_CfgVehicles_ZenSleepingBag0";
+		descriptionShort="$STR_CfgVehicles_ZenSleepingBag1";
+		model="ZenSleep\data\models\sleepingbags\sleepingbag_deployed.p3d";
+		soundImpactType="textile";
+		hiddenSelections[]=
+		{
+			"deployed"
+		};
+		hiddenSelectionsTextures[]={};
+		weight=1000;
+		absorbency=0.30000001;
+		varWetMax=0.49000001;
+		itemSize[]={4,2};
+		repairableWithKits[] = { 5,2 };
+		repairCosts[] = { 30,25 };
+		itemBehaviour=2;
+		rotationFlags=16;
+		slopeTolerance=0.30000001;
+		yawPitchRollLimit[]={30,30,30};
 		class Cargo // only visible when deployed
 		{
 			itemsCargoSize[]={4,2};
@@ -135,8 +248,6 @@ class CfgVehicles
 				class Health
 				{
 					hitpoints=250;
-
-					// RVMATs are handled by script
 					healthLevels[]=
 					{
 						
@@ -144,7 +255,7 @@ class CfgVehicles
 							1,
 							
 							{
-								""
+								"ZenSleep\data\textures\sleepingbags\sleepingbag.rvmat"
 							}
 						},
 						
@@ -152,7 +263,7 @@ class CfgVehicles
 							0.69999999,
 							
 							{
-								""
+								"ZenSleep\data\textures\sleepingbags\sleepingbag.rvmat"
 							}
 						},
 						
@@ -160,7 +271,7 @@ class CfgVehicles
 							0.5,
 							
 							{
-								""
+								"ZenSleep\data\textures\sleepingbags\sleepingbag_damage.rvmat"
 							}
 						},
 						
@@ -168,7 +279,7 @@ class CfgVehicles
 							0.30000001,
 							
 							{
-								""
+								"ZenSleep\data\textures\sleepingbags\sleepingbag_damage.rvmat"
 							}
 						},
 						
@@ -176,7 +287,7 @@ class CfgVehicles
 							0,
 							
 							{
-								""
+								"ZenSleep\data\textures\sleepingbags\sleepingbag_destruct.rvmat"
 							}
 						}
 					};
@@ -184,49 +295,43 @@ class CfgVehicles
 			};
 		};
 	};
-
-	class ZenSleepingBag_Black : ZenSleepingBag_Base
+	class ZenSleepingBag_Black_Deployed : ZenSleepingBagDeployed_Base
 	{
 		scope=2;
 		hiddenSelectionsTextures[]=
 		{
-			"ZenSleep\data\textures\sleepingbags\sleepingbag_packed_black_co.paa",
 			"ZenSleep\data\textures\sleepingbags\sleepingbag_black_co.paa"
 		};
 	};
-	class ZenSleepingBag_Blue : ZenSleepingBag_Base
+	class ZenSleepingBag_Blue_Deployed : ZenSleepingBagDeployed_Base
 	{
 		scope=2;
 		hiddenSelectionsTextures[]=
 		{
-			"ZenSleep\data\textures\sleepingbags\sleepingbag_packed_blue_co.paa",
 			"ZenSleep\data\textures\sleepingbags\sleepingbag_blue_co.paa"
 		};
 	};
-	class ZenSleepingBag_Green : ZenSleepingBag_Base
+	class ZenSleepingBag_Green_Deployed : ZenSleepingBagDeployed_Base
 	{
 		scope=2;
 		hiddenSelectionsTextures[]=
 		{
-			"ZenSleep\data\textures\sleepingbags\sleepingbag_packed_green_co.paa",
 			"ZenSleep\data\textures\sleepingbags\sleepingbag_green_co.paa"
 		};
 	};
-	class ZenSleepingBag_Grey : ZenSleepingBag_Base
+	class ZenSleepingBag_Grey_Deployed : ZenSleepingBagDeployed_Base
 	{
 		scope=2;
 		hiddenSelectionsTextures[]=
 		{
-			"ZenSleep\data\textures\sleepingbags\sleepingbag_packed_grey_co.paa",
 			"ZenSleep\data\textures\sleepingbags\sleepingbag_grey_co.paa"
 		};
 	};
-	class ZenSleepingBag_Red : ZenSleepingBag_Base
+	class ZenSleepingBag_Red_Deployed : ZenSleepingBagDeployed_Base
 	{
 		scope=2;
 		hiddenSelectionsTextures[]=
 		{
-			"ZenSleep\data\textures\sleepingbags\sleepingbag_packed_red_co.paa",
 			"ZenSleep\data\textures\sleepingbags\sleepingbag_red_co.paa"
 		};
 	};
@@ -244,15 +349,9 @@ class CfgVehicles
 		scope=1;
 		displayName="$STR_CfgVehicles_ZenSleepingBag0";
 		descriptionShort="$STR_CfgVehicles_ZenSleepingBag1";
-		model="ZenSleep\data\models\sleepingbags\sleepingbag.p3d";
-		simpleHiddenSelections[]= 
-		{
-			"packed",
-			"deployed"
-	    };
+		model="ZenSleep\data\models\sleepingbags\sleepingbag_deployed.p3d";
 		hiddenSelections[]=
 		{
-			"packed_texture",
 			"deployed"
 		};
 		weight=10000;
@@ -262,7 +361,6 @@ class CfgVehicles
 		scope=1;
 		hiddenSelectionsTextures[]=
 		{
-			"ZenSleep\data\textures\sleepingbags\sleepingbag_packed_black_co.paa",
 			"ZenSleep\data\textures\sleepingbags\sleepingbag_black_co.paa"
 		};
 	};
@@ -271,7 +369,6 @@ class CfgVehicles
 		scope=1;
 		hiddenSelectionsTextures[]=
 		{
-			"ZenSleep\data\textures\sleepingbags\sleepingbag_packed_blue_co.paa",
 			"ZenSleep\data\textures\sleepingbags\sleepingbag_blue_co.paa"
 		};
 	};
@@ -280,7 +377,6 @@ class CfgVehicles
 		scope=1;
 		hiddenSelectionsTextures[]=
 		{
-			"ZenSleep\data\textures\sleepingbags\sleepingbag_packed_green_co.paa",
 			"ZenSleep\data\textures\sleepingbags\sleepingbag_green_co.paa"
 		};
 	};
@@ -289,7 +385,6 @@ class CfgVehicles
 		scope=1;
 		hiddenSelectionsTextures[]=
 		{
-			"ZenSleep\data\textures\sleepingbags\sleepingbag_packed_grey_co.paa",
 			"ZenSleep\data\textures\sleepingbags\sleepingbag_grey_co.paa"
 		};
 	};
@@ -298,7 +393,6 @@ class CfgVehicles
 		scope=1;
 		hiddenSelectionsTextures[]=
 		{
-			"ZenSleep\data\textures\sleepingbags\sleepingbag_packed_red_co.paa",
 			"ZenSleep\data\textures\sleepingbags\sleepingbag_red_co.paa"
 		};
 	};

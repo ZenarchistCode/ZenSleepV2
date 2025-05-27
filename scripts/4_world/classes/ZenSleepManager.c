@@ -40,8 +40,11 @@ class ZenSleepManager
 	void Init()
 	{
 		m_MovementState = new HumanMovementState();
-		m_VisualEffectHandlerClient = new ZenSleepVisualEffectHandlerClient(m_Player);
+		#ifdef SERVER
 		m_EffectHandlerServer = new ZenSleepEffectHandlerServer(m_Player);
+		#else
+		m_VisualEffectHandlerClient = new ZenSleepVisualEffectHandlerClient(m_Player);
+		#endif
 		m_DeltaTime = 0;
 		m_SleepCondition = ZenSleepState.AWAKE;
 		m_SleepStartTimestamp = -1;
@@ -266,8 +269,8 @@ class ZenSleepManager
 		{
 			if (object.IsKindOf(s))
 			{
-				ZenSleepingBag_Base bagBase = ZenSleepingBag_Base.Cast(object);
-				if (bagBase && (!bagBase.IsZenSleepingBagDeployed() || vector.Distance(bagBase.GetPosition(), m_Player.GetPosition()) > 0.5))
+				ZenSleepingBagDeployed_Base bag = ZenSleepingBagDeployed_Base.Cast(object);
+				if (bag.IsRuined() || vector.Distance(bag.GetPosition(), m_Player.GetPosition()) > 0.5)
 					return false;
 
 				TentBase tent = TentBase.Cast(object);
