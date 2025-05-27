@@ -25,7 +25,7 @@ modded class PlayerBase
 		// Register these here on delayed Init so playerbase has completed init first.
 		m_ZenSleepManager = new ZenSleepManager(this);
 
-		if (GetGame().IsClient())
+		if (GetGame().IsClient() && IsControlledPlayer())
 			m_SoundEffectHandlerClient = new ZenSleepSoundEffectHandlerClient(this);
 	}
 
