@@ -25,7 +25,7 @@ modded class PlayerBase
 		// Register these here on delayed Init so playerbase has completed init first.
 		m_ZenSleepManager = new ZenSleepManager(this);
 
-		if (GetGame().IsClient())
+		if (GetGame().IsClient() && IsControlledPlayer())
 			m_SoundEffectHandlerClient = new ZenSleepSoundEffectHandlerClient(this);
 	}
 
@@ -256,10 +256,15 @@ modded class PlayerBase
 		{
 			// We use 1 integer to sync all values, as they will often require sync at the same time anyway.
 			case ZenSleepEnums.RPC_SLEEP_STAT_UPDATE:
-				int data4;
-				ctx.Read(data4);
-				GetZenSleepManager().DoClientFromServerSync(data4);
+			{
+				if (GetZenSleepManager())
+				{
+					int data4;
+					ctx.Read(data4);
+					GetZenSleepManager().DoClientFromServerSync(data4);
+				}
 				break;
+			}
 		}
 	}
 	
