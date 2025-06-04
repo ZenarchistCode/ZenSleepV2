@@ -4,6 +4,12 @@ class ZenSleepEffectHandlerBase extends Managed
 
 	void ZenSleepEffectHandlerBase(PlayerBase player)
 	{
+		#ifdef ENFUSION_AI_PROJECT
+		// Robots don't sleep
+		if (player.IsAI())
+			return;
+		#endif
+
 		m_Player = player; 
 
 		Init();
