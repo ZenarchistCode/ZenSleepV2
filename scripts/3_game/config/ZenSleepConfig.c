@@ -159,7 +159,7 @@ class ZenSleepEffectsServerConfig
 	float MaximumSecsBetweenUnconRedFlashing = 360; // Maximum seconds between possibly falling uncon when red flashing fatigue (affected by chance below)
 	float MinimumSecsBetweenUnconRed = 600; // Minimum seconds between possibly falling uncon when red fatigue (affected by chance below)
 	float MaximumSecsBetweenUnconRed = 900; // Maximum seconds between possibly falling uncon when red fatigue (affected by chance below)
-	float MaximumSecsBuzzedByCombat = 900; // Maximum seconds damage reduces your ability to sleep (ie. 90% total health damage = 90% of this value, does not pause fatigue drain and resets on logout)
+	float MaximumSecsBuzzedByCombat = 0; // Maximum seconds damage reduces your ability to sleep (ie. 90% total health damage = 90% of this value, does not pause fatigue drain and resets on logout)
 	float ChanceToSnoreSleeping = 90; // 90% chance to play snore sound when sleeping
 	float ChanceToYawnRedFlashing = 90; // 90% chance to yawn when red flashing fatigue
 	float ChanceToYawnRed = 25; // 25% chance to yawn when red fatigue

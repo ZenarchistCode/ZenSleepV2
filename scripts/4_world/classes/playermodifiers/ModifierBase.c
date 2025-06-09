@@ -8,13 +8,21 @@ modded class ModifierBase
 
 		// Don't re-apply modifer config upon reconnection or players can abuse it by logging out/in repeatedly
 		if (m_ActivationType != EActivationType.TRIGGER_EVENT_ON_CONNECT)
-			m_Player.GetZenSleepManager().OnModifierActivate(ClassName());
+		{
+			if (m_Player && m_Player.GetZenSleepManager())
+			{
+				m_Player.GetZenSleepManager().OnModifierActivate(ClassName());
+			}
+		}
 	}
 
 	override void Deactivate(bool trigger = true)
 	{
 		super.Deactivate(trigger);
 
-		m_Player.GetZenSleepManager().OnModifierDeactivate(ClassName());
+		if (m_Player && m_Player.GetZenSleepManager())
+		{
+			m_Player.GetZenSleepManager().OnModifierDeactivate(ClassName());
+		}
 	}
 }

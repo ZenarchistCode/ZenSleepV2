@@ -223,6 +223,9 @@ class ZenSleepManager
 
 	void OnStartSleep()
 	{
+		if (!m_Player || !m_Player.GetStatZenFatigue())
+			return;
+
 		m_SleepStartTimestamp = GetGame().GetTime();
 		m_SleepStartFatigue = m_Player.GetStatZenFatigue().Get();
 
@@ -270,7 +273,7 @@ class ZenSleepManager
 			if (object.IsKindOf(s))
 			{
 				ZenSleepingBagDeployed_Base bag = ZenSleepingBagDeployed_Base.Cast(object);
-				if (bag.IsRuined() || vector.Distance(bag.GetPosition(), m_Player.GetPosition()) > 0.5)
+				if (bag && (bag.IsRuined() || vector.Distance(bag.GetPosition(), m_Player.GetPosition()) > 0.5))
 					return false;
 
 				TentBase tent = TentBase.Cast(object);
@@ -334,20 +337,26 @@ class ZenSleepManager
 		float damagePct = damageResult.GetDamage("", "Health") / 100;
 
 		// Acts like drug effect but without any benefits - if player takes damage, stop them from sleeping for a little while due to adrenaline
-		if (damagePct > 0 && m_InabilityToSleepEffectSecs < GetZenSleepConfig().ServerEffectsConfig.MaximumSecsBuzzedByCombat)
+		if (damagePct > 0 && GetZenSleepConfig().ServerEffectsConfig.MaximumSecsBuzzedByCombat > 0 && m_InabilityToSleepEffectSecs < GetZenSleepConfig().ServerEffectsConfig.MaximumSecsBuzzedByCombat)
+		{
 			m_InabilityToSleepEffectSecs += GetZenSleepConfig().ServerEffectsConfig.MaximumSecsBuzzedByCombat * damagePct;
+		}
 	}
 
 	void OnUpdateTickShared(float deltaTime)
 	{
 		if (IsAI())
+		{
 			return;
+		}
 
 		#ifdef SERVER 
 		OnUpdateTickServer(deltaTime);
 		#else
 		if (m_Player.IsControlledPlayer())
+		{
 			OnUpdateTickClient(deltaTime);
+		}
 		#endif
 	}
 
@@ -368,7 +377,9 @@ class ZenSleepManager
 		}
 
 		if (m_InabilityToSleepEffectSecs > 0)
+		{
 			m_InabilityToSleepEffectSecs -= deltaTime;
+		}
 
 		// If player is incapacitated, no need to update anything right now.
 		if (!m_Player.IsAlive() || !m_Player.GetEmoteManager() || m_Player.IsUnconscious()) 
@@ -520,6 +531,7 @@ class ZenSleepManager
 		{
 			restMessage = "#STR_ZenSleepMsg_TooBuzzed.";
 			SendVanillaSleepSoundEventID(EPlayerSoundEventID.SYMPTOM_GASP);
+			Print("[ZenSleep] Player " + m_Player.GetIdentity().GetId() + " too buzzed - drainPaused=" + IsFatigueDrainPaused() + " inabilityToSleepSecs=" + m_InabilityToSleepEffectSecs);
 		}
 
 		// Too energized
