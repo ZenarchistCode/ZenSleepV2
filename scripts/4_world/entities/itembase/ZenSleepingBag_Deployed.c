@@ -5,6 +5,9 @@ class ZenSleepingBagDeployed_Base extends ItemBase
 	
 	void ~ZenSleepingBagDeployed_Base()
     {
+		if (!GetGame())
+			return;
+		
         if (m_ZenBagClutterCutter != NULL)
             GetGame().ObjectDelete(m_ZenBagClutterCutter);
     }

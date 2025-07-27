@@ -5,6 +5,9 @@ class ZenSleepSoundEffectHandlerClient extends ZenSleepEffectHandlerBase
 
 	void ~ZenSleepSoundEffectHandlerClient()
 	{
+		if (!GetGame())
+			return;
+		
 		if (m_Sound)
 			m_Sound.Stop();
 	}

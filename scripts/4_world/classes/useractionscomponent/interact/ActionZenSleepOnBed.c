@@ -28,12 +28,13 @@ class ActionZenSleepOnBed : ActionInteractBase
 		m_CallbackClass = ActionZenSleepOnBedCB;
         m_CommandUID = -1;
         m_StanceMask = DayZPlayerConstants.STANCEMASK_ERECT | DayZPlayerConstants.STANCEMASK_CROUCH;
+        m_Text = "#STR_USRACT_ID_EMOTE_LYINGDOWN";
     }
 
-    override string GetText()
-    {
-        return "#STR_USRACT_ID_EMOTE_LYINGDOWN";
-    }
+    override bool IsInstant()
+	{
+		return true;
+	}
 
     override bool ActionCondition(PlayerBase player, ActionTarget target, ItemBase item)
     {
@@ -47,19 +48,24 @@ class ActionZenSleepOnBed : ActionInteractBase
         return player.GetZenSleepManager().CanSleepOnBedObject(targetObject);
     }
 
-    override void OnEndClient(ActionData action_data)
-    {
-        if (action_data.m_Player.GetEmoteManager())
-        {
-            action_data.m_Player.GetEmoteManager().CreateEmoteCBFromMenu(EmoteConstants.ID_EMOTE_LYINGDOWN);
-        }
-    }
+    override void Start(ActionData action_data)
+	{
+		super.Start(action_data);
 
-    override void OnEndServer(ActionData action_data)
-    {
-        if (action_data.m_Player.GetZenSleepManager())
+        if (GetGame().IsClient())
         {
-            action_data.m_Player.GetZenSleepManager().SetBed(action_data.m_Target.GetObject());
+            if (action_data.m_Player.GetEmoteManager())
+            {
+                action_data.m_Player.GetEmoteManager().CreateEmoteCBFromMenu(EmoteConstants.ID_EMOTE_LYINGDOWN);
+            }
         }
-    }
+
+        if (GetGame().IsDedicatedServer())
+        {
+            if (action_data.m_Player.GetZenSleepManager())
+            {
+                action_data.m_Player.GetZenSleepManager().SetBed(action_data.m_Target.GetObject());
+            }
+        }
+	}
 }

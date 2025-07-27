@@ -73,7 +73,9 @@ class ZenFatigueMdfr extends ModifierBase
 				if (GetZenSleepConfig().GainConfig.MinSecsAsleepInBedToTriggerImmunityBoost > 0 && player.GetZenSleepManager().GetSecondsAsleep() >= GetZenSleepConfig().GainConfig.MinSecsAsleepInBedToTriggerImmunityBoost)
 				{
 					if (!player.GetModifiersManager().IsModifierActive(eModifiers.MDF_IMMUNITYBOOST))
+					{
 						player.GetModifiersManager().ActivateModifier(eModifiers.MDF_IMMUNITYBOOST);
+					}
 				}
 			}
 		}

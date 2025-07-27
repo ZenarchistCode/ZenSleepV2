@@ -5,7 +5,7 @@ class ZenSleepConfig
 	const static string ZEN_MOD_CFG_FILE		= "ZenSleepConfig.json";
 	
 	// Version
-	static const string CONFIG_VERSION = "Updated 27th May 2025";
+	static const string CONFIG_VERSION = "Updated 27th July 2025";
 	string ConfigVersion;
 
 	// Non-serialized admin status for clients 
@@ -18,6 +18,7 @@ class ZenSleepConfig
 	ref ZenSleepModifiers ModifiersConfig;
 	ref ZenSleepEffectsServerConfig ServerEffectsConfig;
 	ref ZenSleepEffectsClientConfig ClientEffectsConfig;
+	ref ZenSleepMessages Messages;
 	ref array<string> AdminIDs;
 	bool DebugMode; // Turn this on when tweaking & testing important values
 
@@ -51,6 +52,7 @@ class ZenSleepConfig
 		ModifiersConfig			= new ZenSleepModifiers();
 		ServerEffectsConfig		= new ZenSleepEffectsServerConfig();
 		ClientEffectsConfig		= new ZenSleepEffectsClientConfig();
+		Messages				= new ZenSleepMessages();
 		DebugMode				= false;
 		AdminIDs				= new array<string>;
 		AdminIDs.Insert("www.steamidfinder.com");
@@ -222,6 +224,21 @@ class ZenSleepModifiers
 		ModifierPausesSeconds.Set("EpinephrineMdfr", 300); // Epi pauses sleep drain for 5 minutes
 		ModifierPausesSeconds.Set("ZenSleep_Amphetamine", 900); // Speed pauses sleep drain for 15 minutes
 	}
+}
+
+// Server-side message config 
+class ZenSleepMessages
+{
+	string CantSleep = "#STR_ZenSleepMsg_CantSleep,";
+	string TooBuzzed = "#STR_ZenSleepMsg_TooBuzzed.";
+	string TooAwake = "#STR_ZenSleepMsg_TooAwake.";
+	string TooSunny = "#STR_ZenSleepMsg_TooSunny.";
+	string TooSick = "#STR_ZenSleepMsg_TooSick.";
+	string TooWet = "#STR_ZenSleepMsg_TooWet.";
+	string TooCold = "#STR_ZenSleepMsg_TooCold.";
+	string TooHot = "#STR_ZenSleepMsg_TooHot.";
+	string TooUncomfortable = "#STR_ZenSleepMsg_TooUncomfortable.";
+	string TooHungryThirsty = "#STR_ZenSleepMsg_TooHungryThirsty.";
 }
 
 ref ZenSleepConfig m_ZenSleepConfig;

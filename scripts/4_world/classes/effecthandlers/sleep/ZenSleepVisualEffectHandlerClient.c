@@ -38,6 +38,9 @@ class ZenSleepVisualEffectHandlerClient extends ZenSleepEffectHandlerBase
 
 	void ~ZenSleepVisualEffectHandlerClient()
 	{
+		if (!GetGame())
+			return;
+		
 		if (m_SleepingVFX)
 			m_SleepingVFX.Stop();
 

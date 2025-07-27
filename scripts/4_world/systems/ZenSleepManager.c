@@ -92,25 +92,38 @@ class ZenSleepManager
 		return m_Bed;
 	}
 
-	// Check if player has used a bed to sleep on, and the bed is not wetter than "excludeDampState"
-	bool HasBed(float excludeDampState = GameConstants.STATE_WET)
+	// Check if player has used a bed to sleep on, and the bed is not wetter than "excludeDampState" or more damaged than "excludeDamageState"
+	bool HasBed(float excludeDampState = GameConstants.STATE_WET, int excludeDamageState = GameConstants.STATE_BADLY_DAMAGED)
 	{
-		ItemBase bed = ItemBase.Cast(m_Bed);
+		ItemBase bedItem = ItemBase.Cast(GetBed());
 
-		if (bed && bed.GetWet() >= excludeDampState)
-			return false;
+		if (bedItem)
+		{
+			if (bedItem.GetWet() >= excludeDampState)
+			{
+				return false;
+			}
+			
+			if (bedItem.GetHealthLevel() >= excludeDamageState)
+			{
+				return false;
+			}
+		}
 
-		return m_Bed != NULL;
+		return GetBed() != NULL;
 	}
 
-	// Quickest vanilla way to detect being "inside" - will also return true for some tents, vehicles etc
+	// Quickest vanilla way to detect being "inside" - will also return true for some tents, vehicles etc. Can be a bit hit and miss but hey, it's DayZ, what isn't?
 	bool IsSheltered()
 	{
-		return m_Player.IsSoundInsideBuilding();
+		return m_Player && m_Player.IsSoundInsideBuilding();
 	}
 
 	int GetPlayerMovementState()
 	{
+		if (!m_Player)
+			return -1;
+
 		m_Player.GetMovementState(m_MovementState);
 		return m_MovementState.m_iMovement;
 	}
@@ -242,7 +255,7 @@ class ZenSleepManager
 		// Fail-safe check for a nearby bed within 1 meter if player forgot to use F to lie down on the object itself
 		if (GetGame().IsDedicatedServer())
 		{
-			if (!m_Bed)
+			if (!GetBed())
 			{
 				array<Object> nearest_objects = new array<Object>;
 				GetGame().GetObjectsAtPosition3D(m_Player.GetPosition(), 1.0, nearest_objects, NULL);
@@ -267,6 +280,9 @@ class ZenSleepManager
 		if (!ZenModEnabled("ZenSleep"))
 			return false;
 		#endif
+
+		if (!m_Player)
+			return false;
 
 		foreach (string s : GetZenSleepConfig().ClientEffectsConfig.BedObjects)
 		{
@@ -306,7 +322,7 @@ class ZenSleepManager
 
 	void ApplyAudioAttenuation()
 	{
-		if (m_Player.GetMasterAttenuation() == "")
+		if (m_Player && m_Player.GetMasterAttenuation() == "")
 			m_Player.SetMasterAttenuation("ZenSleepAttenuation");
 	}
 
@@ -314,12 +330,15 @@ class ZenSleepManager
 	{
 		GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).Remove(ApplyAudioAttenuation);
 
-		if (m_Player.GetMasterAttenuation() == "ZenSleepAttenuation") // check master atten hasn't been overridden (eg. flashbang'd/burlapped)
+		if (m_Player && m_Player.GetMasterAttenuation() == "ZenSleepAttenuation") // check master atten hasn't been overridden (eg. flashbang'd/burlapped)
 			m_Player.SetMasterAttenuation("");
 	}
 
 	void LockCameraLimits()
 	{
+		if (!m_Player)
+			return;
+
 		//! TODO: Come back to this, can't seem to get this to work after half an hour of screwing around.
 		// I wanted to lock the camera view so you can't go all fuckin Chucky 360 head spins while asleep
 		m_Player.SetLookLimits(30, -30, -45, 45);
@@ -328,6 +347,9 @@ class ZenSleepManager
 
 	void UnlockCameraLimits()
 	{
+		if (!m_Player)
+			return;
+
 		m_Player.SetLookLimits(-85, 85, -160, 160);
 		m_Player.SetAimLimits(-85, 85, -180, 180);
 	}
@@ -353,7 +375,7 @@ class ZenSleepManager
 		#ifdef SERVER 
 		OnUpdateTickServer(deltaTime);
 		#else
-		if (m_Player.IsControlledPlayer())
+		if (m_Player && m_Player.IsControlledPlayer())
 		{
 			OnUpdateTickClient(deltaTime);
 		}
@@ -382,7 +404,7 @@ class ZenSleepManager
 		}
 
 		// If player is incapacitated, no need to update anything right now.
-		if (!m_Player.IsAlive() || !m_Player.GetEmoteManager() || m_Player.IsUnconscious()) 
+		if (!m_Player || !m_Player.IsAlive() || !m_Player.GetEmoteManager() || m_Player.IsUnconscious()) 
 			return;
 
 		// Handle server-side sound & visual syncs in separate class
@@ -438,26 +460,41 @@ class ZenSleepManager
 
 	float GetFatiguePercent()
 	{
+		if (!m_Player)
+			return 0;
+
 		return (m_Player.GetStatZenFatigue().Get() / m_Player.GetStatZenFatigue().GetMax()) * 100;
 	}
 
 	float GetPlayerTemperature()
 	{
+		if (!m_Player)
+			return 0;
+
 		return m_Player.GetStatHeatComfort().Get();
 	}
 
 	float GetPlayerHeatBuffPercent()
 	{
+		if (!m_Player)
+			return 0;
+
 		return (m_Player.GetStatHeatBuffer().Get() / m_Player.GetStatHeatBuffer().GetMax()) * 100;
 	}
 
 	float GetPlayerWetness()
 	{
+		if (!m_Player)
+			return 0;
+
 		return m_Player.GetStatWet().Get();
 	}
 
 	float GetPlayerWeightPercent()
 	{
+		if (!m_Player)
+			return 0;
+
 		float weight = m_Player.GetWeightEx();
 		float staminaImpact = Math.Max((CfgGameplayHandler.GetStaminaMax() - (((weight - CfgGameplayHandler.GetStaminaWeightLimitThreshold()) / GameConstants.STAMINA_KG_TO_GRAMS) * CfgGameplayHandler.GetStaminaKgToStaminaPercentPenalty())), CfgGameplayHandler.GetStaminaMinCap());
 		return 100 - Math.Clamp(staminaImpact, 0, 100);
@@ -465,22 +502,34 @@ class ZenSleepManager
 
 	float GetPlayerHunger()
 	{
+		if (!m_Player)
+			return 0;
+
 		return m_Player.GetStatEnergy().Get();
 	}
 
 	float GetPlayerThirst()
 	{
+		if (!m_Player)
+			return 0;
+
 		return m_Player.GetStatWater().Get();
 	}
 
 	bool IsPlayerSick()
 	{
+		if (!m_Player)
+			return 0;
+
 		return m_Player.HasDisease() && !DoesPlayerOnlyHaveKuru();
 	}
 
 	// Check if player's only disease is kuru. I don't want to prevent cannibals from sleeping, that would be inhumane.
 	bool DoesPlayerOnlyHaveKuru()
 	{
+		if (!m_Player)
+			return false;
+
 		return m_Player.GetModifiersManager().IsModifierActive(eModifiers.MDF_BRAIN) && m_Player.m_DiseaseCount == 1;
 	}
 
@@ -491,6 +540,9 @@ class ZenSleepManager
 
 	void SendVanillaSleepSoundset(string soundset)
 	{
+		if (!m_Player)
+			return;
+
 		int soundsetArrayID = ZenSleepSounds.GetUniVanillaSounds().Find(soundset);
 
 		if (soundsetArrayID != -1)
@@ -501,6 +553,9 @@ class ZenSleepManager
 
 	void SendVanillaSleepSoundEventID(int id)
 	{
+		if (!m_Player)
+			return;
+
 		if (id < 0 || id > (EPlayerSoundEventID.ENUM_COUNT - 1))
 		{
 			Error("[ZenSleepManager] Send vanilla sleep sound enum ID out of bounds = " + id);
@@ -514,6 +569,9 @@ class ZenSleepManager
 	// It will select whichever wake-up call is triggered by the lowest fatigue level.
 	bool CheckWakeUpConditions()
 	{
+		if (!m_Player)
+			return false;
+
 		string restMessage = "";
 
 		// Get relevant stats to check against fatigue thresholds
@@ -529,7 +587,7 @@ class ZenSleepManager
 		// On drugs (ie. someone dosed us while sleeping the cheeky bastards)
 		if (IsFatigueDrainPaused() || m_InabilityToSleepEffectSecs > 0)
 		{
-			restMessage = "#STR_ZenSleepMsg_TooBuzzed.";
+			restMessage = GetZenSleepConfig().Messages.TooBuzzed;
 			SendVanillaSleepSoundEventID(EPlayerSoundEventID.SYMPTOM_GASP);
 			Print("[ZenSleep] Player " + m_Player.GetIdentity().GetId() + " too buzzed - drainPaused=" + IsFatigueDrainPaused() + " inabilityToSleepSecs=" + m_InabilityToSleepEffectSecs);
 		}
@@ -537,7 +595,7 @@ class ZenSleepManager
 		// Too energized
 		if (restMessage == "" && tooEnergized)
 		{
-			restMessage = "#STR_ZenSleepMsg_TooAwake.";
+			restMessage = GetZenSleepConfig().Messages.TooAwake;
 			SendVanillaSleepSoundEventID(EPlayerSoundEventID.RELEASE_BREATH);
 		}
 
@@ -547,7 +605,7 @@ class ZenSleepManager
 			{
 				if (playerFatigue >= GetZenSleepConfig().GainConfig.MaxRestGain_Time_Daylight && m_Player.m_UndergroundPresence != EUndergroundPresence.FULL)
 				{
-					restMessage = "#STR_ZenSleepMsg_TooSunny.";
+					restMessage = GetZenSleepConfig().Messages.TooSunny;
 					SendVanillaSleepSoundEventID(EPlayerSoundEventID.RELEASE_BREATH);
 				}
 			}
@@ -558,7 +616,7 @@ class ZenSleepManager
 		{
 			if (playerFatigue >= GetZenSleepConfig().GainConfig.MaxRestGain_Illness)
 			{
-				restMessage = "#STR_ZenSleepMsg_TooSick.";
+				restMessage = GetZenSleepConfig().Messages.TooSick;
 				SendVanillaSleepSoundEventID(EPlayerSoundEventID.SYMPTOM_COUGH);
 			}
 		}
@@ -568,7 +626,7 @@ class ZenSleepManager
 		{
 			if (playerFatigue >= GetZenSleepConfig().GainConfig.MaxRestGain_Wet)
 			{
-				restMessage = "#STR_ZenSleepMsg_TooWet.";
+				restMessage = GetZenSleepConfig().Messages.TooWet;
 				SendVanillaSleepSoundset("WringClothes_SoundSet");
 			}
 		}
@@ -578,7 +636,7 @@ class ZenSleepManager
 		{
 			if (playerFatigue >= GetZenSleepConfig().GainConfig.MaxRestGain_Temp_DarkBlueFlashing)
 			{
-				restMessage = "#STR_ZenSleepMsg_TooCold.";
+				restMessage = GetZenSleepConfig().Messages.TooCold;
 				SendVanillaSleepSoundEventID(EPlayerSoundEventID.RATTLING_TEETH);
 			}
 		}
@@ -591,7 +649,7 @@ class ZenSleepManager
 			{
 				if (playerFatigue >= GetZenSleepConfig().GainConfig.MaxRestGain_Temp_DarkBlue)
 				{
-					restMessage = "#STR_ZenSleepMsg_TooCold.";
+					restMessage = GetZenSleepConfig().Messages.TooCold;
 					SendVanillaSleepSoundEventID(EPlayerSoundEventID.RATTLING_TEETH);
 				}
 			}
@@ -601,7 +659,7 @@ class ZenSleepManager
 			{
 				if (playerFatigue >= GetZenSleepConfig().GainConfig.MaxRestGain_Temp_LightBlue)
 				{
-					restMessage = "#STR_ZenSleepMsg_TooCold.";
+					restMessage = GetZenSleepConfig().Messages.TooCold;
 					SendVanillaSleepSoundEventID(EPlayerSoundEventID.FREEZING);
 				}
 			}
@@ -612,7 +670,7 @@ class ZenSleepManager
 		{
 			if (playerFatigue >= GetZenSleepConfig().GainConfig.MaxRestGain_Temp_RedFlashing)
 			{
-				restMessage = "#STR_ZenSleepMsg_TooHot.";
+				restMessage = GetZenSleepConfig().Messages.TooHot;
 				SendVanillaSleepSoundEventID(EPlayerSoundEventID.HOT);
 			}
 		}
@@ -622,7 +680,7 @@ class ZenSleepManager
 		{
 			if (playerFatigue >= GetZenSleepConfig().GainConfig.MaxRestGain_Temp_Red)
 			{
-				restMessage = "#STR_ZenSleepMsg_TooHot.";
+				restMessage = GetZenSleepConfig().Messages.TooHot;
 				SendVanillaSleepSoundEventID(EPlayerSoundEventID.HOT);
 			}
 		}
@@ -632,7 +690,7 @@ class ZenSleepManager
 		{
 			if (playerFatigue >= GetZenSleepConfig().GainConfig.MaxRestGain_Temp_Yellow)
 			{
-				restMessage = "#STR_ZenSleepMsg_TooHot.";
+				restMessage = GetZenSleepConfig().Messages.TooHot;
 				SendVanillaSleepSoundEventID(EPlayerSoundEventID.HOT);
 			}
 		}
@@ -642,7 +700,7 @@ class ZenSleepManager
 		{
 			if (playerFatigue >= GetZenSleepConfig().GainConfig.MaxRestGain_FoodWater_RedFlashing)
 			{
-				restMessage = "#STR_ZenSleepMsg_TooUncomfortable.";
+				restMessage = GetZenSleepConfig().Messages.TooHungryThirsty;
 				SendVanillaSleepSoundset("hungry_uni_Voice_Char_SoundSet"); // why is this the only one not a sound event ID bohemia?? Geez looeyz
 			}
 		}
@@ -652,7 +710,7 @@ class ZenSleepManager
 		{
 			if (playerFatigue >= GetZenSleepConfig().GainConfig.MaxRestGain_FoodWater_RedFlashing)
 			{
-				restMessage = "#STR_ZenSleepMsg_TooUncomfortable.";
+				restMessage = GetZenSleepConfig().Messages.TooHungryThirsty;
 				SendVanillaSleepSoundEventID(EPlayerSoundEventID.THIRST);
 			}
 		}
@@ -662,7 +720,7 @@ class ZenSleepManager
 		{
 			if (playerFatigue >= GetZenSleepConfig().GainConfig.MaxRestGain_FoodWater_Red)
 			{
-				restMessage = "#STR_ZenSleepMsg_TooUncomfortable.";
+				restMessage = GetZenSleepConfig().Messages.TooHungryThirsty;
 				SendVanillaSleepSoundset("hungry_uni_Voice_Char_SoundSet");
 			}
 		}
@@ -672,7 +730,7 @@ class ZenSleepManager
 		{
 			if (playerFatigue >= GetZenSleepConfig().GainConfig.MaxRestGain_FoodWater_Red)
 			{
-				restMessage = "#STR_ZenSleepMsg_TooUncomfortable.";
+				restMessage = GetZenSleepConfig().Messages.TooHungryThirsty;
 				SendVanillaSleepSoundEventID(EPlayerSoundEventID.THIRST);
 			}
 		}
@@ -682,7 +740,7 @@ class ZenSleepManager
 		{
 			if (playerFatigue >= GetZenSleepConfig().GainConfig.MaxRestGain_FoodWater_Yellow)
 			{
-				restMessage = "#STR_ZenSleepMsg_TooUncomfortable.";
+				restMessage = GetZenSleepConfig().Messages.TooHungryThirsty;
 				SendVanillaSleepSoundset("hungry_uni_Voice_Char_SoundSet");
 			}
 		}
@@ -692,7 +750,7 @@ class ZenSleepManager
 		{
 			if (playerFatigue >= GetZenSleepConfig().GainConfig.MaxRestGain_FoodWater_Yellow)
 			{
-				restMessage = "#STR_ZenSleepMsg_TooUncomfortable.";
+				restMessage = GetZenSleepConfig().Messages.TooHungryThirsty;
 				SendVanillaSleepSoundEventID(EPlayerSoundEventID.THIRST);
 			}
 		}
@@ -704,7 +762,7 @@ class ZenSleepManager
 			if (IsFatigueDrainPaused())
 				sleepState = ZenSleepState.ON_DRUGS;
 
-			SetSleepCondition(sleepState, "#STR_ZenSleepMsg_CantSleep, " + restMessage);
+			SetSleepCondition(sleepState, GetZenSleepConfig().Messages.CantSleep + " " + restMessage);
 			return true;
 		}
 
@@ -714,7 +772,7 @@ class ZenSleepManager
 	bool IsLyingDown()
 	{
 		// Check emote manager first
-		if (m_Player.GetEmoteManager() != NULL && m_Player.GetEmoteManager().IsLyingDownZS())
+		if (!m_Player || (m_Player.GetEmoteManager() != NULL && m_Player.GetEmoteManager().IsLyingDownZS()))
 			return true;
 
 		// Then check action manager
@@ -793,7 +851,7 @@ class ZenSleepManager
 
 	void OnModifierActivate(string className, float quantity = 1.0)
 	{
-		if (IsAI())
+		if (!m_Player || IsAI())
 			return;
 
 		if (className != "BloodRegenMdfr") // This spams the debug messages which is annoying.
@@ -820,7 +878,7 @@ class ZenSleepManager
 
 	void OnModifierDeactivate(string className, float quantity = 1.0)
 	{
-		if (IsAI())
+		if (!m_Player || IsAI())
 			return;
 
 		if (className != "BloodRegenMdfr") // This spams the debug messages which is annoying.
