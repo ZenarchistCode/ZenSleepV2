@@ -56,6 +56,15 @@ class CfgMods
 		};
 		class defs
 		{
+			class engineScriptModule
+			{
+				value="";
+				files[]=
+				{
+					"ZenSleep/scripts/common",
+					"ZenSleep/scripts/1_core"
+				};
+			};
 			class gameScriptModule
 			{
 				value="";

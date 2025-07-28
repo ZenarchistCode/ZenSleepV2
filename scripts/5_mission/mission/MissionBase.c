@@ -5,6 +5,12 @@ modded class MissionBase
 		#ifdef SERVER
 		// SERVER RECEIVE RPC
 		GetRPCManager().AddRPC("ZenMod_RPC", "RPC_ReceiveZenSleepConfigReloadRequest", this, SingeplayerExecutionType.Server);
+
+		// CommunityOnlineTools compatibility
+		#ifdef JM_COT
+		GetRPCManager().AddRPC("ZenMod_RPC", "RPC_ReceiveZenSleepSetStatCOT", this, SingeplayerExecutionType.Server);
+		#endif
+
 		#else
 		// CLIENT RECEIVE RPC
 		GetRPCManager().AddRPC("ZenMod_RPC", "RPC_ReceiveZenSleepClientConfig", this, SingeplayerExecutionType.Client);
@@ -55,4 +61,36 @@ modded class MissionBase
 		ZenFatigueNotfr.SetUpFatigueThresholds(); // Reload thresholds
 		ZenSleepFunctions.DebugMessage("Successfully reloaded and resync'd config.");
 	}
+
+	#ifdef JM_COT
+	//! Client -> server 
+	void RPC_ReceiveZenSleepSetStatCOT(CallType type, ParamsReadContext ctx, PlayerIdentity sender, Object target)
+	{
+		JMPlayerInstance instance;
+		if (!GetPermissionsManager().HasPermission("Admin.Player.Set.ZenSleep", sender, instance))
+			return;
+
+		Param2<float, array<string>> data;
+		if (!ctx.Read(data))
+		{
+			Error("[ZenModPack] RPC_ReceiveZenSleepSetStatCOT: sync data read error");
+			return;
+		}
+
+		array<Man> players = new array<Man>();
+		GetGame().GetPlayers(players);
+			
+		foreach (Man man : players)
+		{
+			PlayerBase player;
+			if (Class.CastTo(player, man))
+			{
+				if (player.GetIdentity() && data.param2.Find(player.GetIdentity().GetId()) != -1)
+				{
+					player.GetStatZenFatigue().Set(data.param1);
+				}
+			}
+		}
+	}
+	#endif
 }
