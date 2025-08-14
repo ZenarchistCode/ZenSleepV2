@@ -178,16 +178,31 @@ modded class PlayerBase
 	// ############################### SERVER-SIDE HANDLING OF NEW FATIGUE STAT ###############################
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	protected PlayerStat<float> m_StatZenFatigue;
-
 	PlayerStat<float> GetStatZenFatigue()
 	{
-		if (!m_StatZenFatigue && GetPlayerStats()) 
+		return ZenSleep_FindFloatStatByLabel("ZenSleep");
+	}
+
+	// For Namalsk frostbite/other mod compatibility - get stat by label, not index/id, 
+	// which can conflict when multiple mods use PCO to register new stats.
+	PlayerStat<float> ZenSleep_FindFloatStatByLabel(string label)
+	{
+		PlayerStatsPCO_Base pco = GetPlayerStats().GetPCO();
+		if (!pco) 
+			return null;
+
+		array<ref PlayerStatBase> stats = pco.Get();
+		if (!stats) 
+			return null;
+
+		for (int i = 0; i < stats.Count(); i++)
 		{
-			m_StatZenFatigue = PlayerStat<float>.Cast(GetPlayerStats().GetStatObject(ZenSleepEnums.STAT_FATIGUE));
+			PlayerStatBase s = stats[i];
+			if (s && s.GetLabel() == label)
+				return PlayerStat<float>.Cast(s);
 		}
 
-		return m_StatZenFatigue;
+		return NULL;
 	}
 
 	EStatLevels GetStatLevelZenFatigue()

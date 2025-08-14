@@ -24,6 +24,7 @@ modded class EmoteManager
 
 			if (GetZenSleepConfig().ClientEffectsConfig.AllowInventoryWhileSleeping) // Allow inventory access if permitted by server config
 			{
+				m_InventoryAccessLocked = false;
 				m_Player.SetInventorySoftLock(false);
 			}
 		}
@@ -48,4 +49,11 @@ modded class EmoteManager
 			m_Player.GetZenSleepManager().OnStopSleep();
 		}
 	}
+
+	/*override void SetEmoteLockState(bool state)
+	{
+		super.SetEmoteLockState(state);
+
+		// hmmm.. overriding this doesn't stop inventory closing while sleeping
+	}*/
 }

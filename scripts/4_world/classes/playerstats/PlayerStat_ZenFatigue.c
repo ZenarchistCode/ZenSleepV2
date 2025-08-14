@@ -5,15 +5,44 @@
 // now so I'll leave it as-is until I have a good reason to refactor the fatigue stat values tracking.
 modded class PlayerStatsPCO_current
 {
+	protected int m_ZenFatigueIndex = -1;
+
+	int GetZenStatFatigueIndex()
+	{
+		return m_ZenFatigueIndex;
+	}
+
 	override void Init()
 	{
 		super.Init();
 
 		#ifdef ZENMODPACK
-		if (!GetGame().IsDedicatedServer() || !ZenModEnabled("ZenSleep"))
+		if (!ZenModEnabled("ZenSleep"))
 			return;
 		#endif
 
-		RegisterStat(ZenSleepEnums.STAT_FATIGUE, new PlayerStat<float>(0, ZenSleepConstants.SL_FATIGUE_MAX, ZenSleepConstants.SL_FATIGUE_MAX, "ZenSleep", EPSstatsFlags.EMPTY));
+		// For Namalsk compatibility. Registering multiple modded stats can create conflicting stat indexes, so just append the last registered stat.
+		m_ZenFatigueIndex = m_PlayerStats.Count();
+		RegisterStat(m_ZenFatigueIndex, new PlayerStat<float>(0, ZenSleepConstants.SL_FATIGUE_MAX, ZenSleepConstants.SL_FATIGUE_MAX, "ZenSleep", EPSstatsFlags.EMPTY));
+	}
+}
+
+modded class PlayerStatsPCO_Base
+{
+	override void RegisterStat(int id, PlayerStatBase stat)
+	{
+		super.RegisterStat(id, stat);
+		
+		#ifdef SERVER
+		#ifdef ZENMODPACK
+		if (!ZenModEnabled("ZenSleep"))
+			return;
+		#endif
+
+		if (GetZenSleepConfig().DebugMode)
+		{
+			Print("[ZenSleepDebug] Registered stat: " + stat.GetLabel() + " with id " + id);
+		}
+		#endif
 	}
 }
