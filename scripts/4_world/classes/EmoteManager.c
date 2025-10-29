@@ -60,7 +60,7 @@ modded class EmoteManager
 	// This allows 
 	override void SetEmoteLockState(bool state)
     {
-		if (GetZenSleepConfig().ClientEffectsConfig.AllowInventoryWhileSleeping)
+		if (GetZenSleepConfig() && GetZenSleepConfig().ClientEffectsConfig && GetZenSleepConfig().ClientEffectsConfig.AllowInventoryWhileSleeping)
 			m_InventoryAccessLocked = state;
 
 		super.SetEmoteLockState(state);

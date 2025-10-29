@@ -39,7 +39,7 @@ modded class PlayerBase
 		}
 		#endif
 
-		if (GetZenSleepManager().IsLyingDown() && GetZenSleepConfig().ClientEffectsConfig.AllowInventoryWhileSleeping)
+		if (GetZenSleepManager() && GetZenSleepManager().IsLyingDown() && GetZenSleepConfig() && GetZenSleepConfig().ClientEffectsConfig && GetZenSleepConfig().ClientEffectsConfig.AllowInventoryWhileSleeping)
 			return; // Don't close inventory while lie down emote is active.
 
 		super.CloseInventoryMenu();
