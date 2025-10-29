@@ -29,6 +29,22 @@ modded class PlayerBase
 			m_SoundEffectHandlerClient = new ZenSleepSoundEffectHandlerClient(this);
 	}
 
+	override void CloseInventoryMenu()
+	{
+		#ifdef ZENMODPACK
+		if (!ZenModEnabled("ZenSleep"))
+		{
+			super.CloseInventoryMenu();
+			return;
+		}
+		#endif
+
+		if (GetZenSleepManager().IsLyingDown() && GetZenSleepConfig().ClientEffectsConfig.AllowInventoryWhileSleeping)
+			return; // Don't close inventory while lie down emote is active.
+
+		super.CloseInventoryMenu();
+	}
+
 	ZenSleepManager GetZenSleepManager()
 	{
 		return m_ZenSleepManager;

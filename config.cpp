@@ -493,6 +493,13 @@ class CfgVehicles
 				};
 			};
 		};
+		// Terje medical compatibility
+		medPainkillerLevel = 2;
+		medPainkillerTimeSec = 300;
+		overdosedIncrement = 0.55;
+		medicalItem=1;
+		medSkillExpAddToSelf=50;
+		medicalInjectorsCategory=1;		
 	};
 	class ZenSleep_Amphetamine: Inventory_Base
 	{
@@ -581,6 +588,12 @@ class CfgVehicles
 				};
 			};
 		};
+		// Terje medical compatibility 
+		medAdrenalinTimeSec = 60;
+		overdosedIncrement = 0.55;
+		medicalItem=1;
+		medSkillExpAddToSelf=50;
+		medicalInjectorsCategory=1;
 	};
 };
 

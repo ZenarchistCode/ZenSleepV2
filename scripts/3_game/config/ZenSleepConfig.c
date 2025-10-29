@@ -28,6 +28,8 @@ class ZenSleepConfig
 		if (!GetGame().IsDedicatedServer())
 			return;
 
+		SetDefaultValues();
+
 		if (FileExist(ZEN_MOD_CFG_PROFILES + ZEN_MOD_CFG_FILE))
 		{
 			JsonFileLoader<ZenSleepConfig>.JsonLoadFile(ZEN_MOD_CFG_PROFILES + ZEN_MOD_CFG_FILE, this);
@@ -40,10 +42,17 @@ class ZenSleepConfig
 			else
 			{
 				// Config exists and version matches, stop here. Re-save to add/remove any config changes to structure.
+				FixUpdatedVars();
+				Save();
 				return;
 			}
 		}
 
+		Save();
+	}
+
+	void SetDefaultValues()
+	{
 		ConfigVersion = CONFIG_VERSION;
 
 		GeneralConfig			= new ZenSleepGeneralConfig();
@@ -56,8 +65,16 @@ class ZenSleepConfig
 		DebugMode				= false;
 		AdminIDs				= new array<string>;
 		AdminIDs.Insert("www.steamidfinder.com");
+	}
 
-		Save();
+	void FixUpdatedVars()
+	{
+		// used to patch any broken config after an update which adds new config
+		// (eg. loading an existing json after adding new map<x,x>'s to this class will not init the map properly on next load)
+		if (!ModifiersConfig.StaminaRecoveryModifiers || ModifiersConfig.StaminaRecoveryModifiers.Count() == 0)
+		{
+			ModifiersConfig.SetDefaultStaminaModifiers();
+		}
 	}
 
 	void Reload()
@@ -206,6 +223,7 @@ class ZenSleepModifiers
 	ref map<string, float> ModifierDeactivatedPercent;
 	ref map<string, float> ModifierActivatedPercent;
 	ref map<string, float> ModifierPausesSeconds;
+	ref map<string, float> StaminaRecoveryModifiers;
 
 	void ZenSleepModifiers()
 	{
@@ -223,6 +241,14 @@ class ZenSleepModifiers
 		ModifierPausesSeconds = new map<string, float>;
 		ModifierPausesSeconds.Set("EpinephrineMdfr", 300); // Epi pauses sleep drain for 5 minutes
 		ModifierPausesSeconds.Set("ZenSleep_Amphetamine", 900); // Speed pauses sleep drain for 15 minutes
+	}
+
+	void SetDefaultStaminaModifiers()
+	{
+		StaminaRecoveryModifiers = new map<string, float>;
+		StaminaRecoveryModifiers.Set("Yellow", 0.8);
+		StaminaRecoveryModifiers.Set("Red", 0.6);
+		StaminaRecoveryModifiers.Set("RedFlashing", 0.4);
 	}
 }
 

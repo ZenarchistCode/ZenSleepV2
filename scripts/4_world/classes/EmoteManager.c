@@ -5,6 +5,16 @@ modded class EmoteManager
 		return m_Callback != NULL && m_Callback.m_callbackID == DayZPlayerConstants.CMD_GESTUREFB_LYINGDOWN && m_bEmoteIsPlaying;
 	}
 
+	bool ShouldAllowInvWhileSleepingZS()
+    {
+        #ifdef ZENMODPACK
+        if (!ZenModEnabled("ZenSleep")) 
+			return false;
+        #endif
+
+        return GetZenSleepConfig().ClientEffectsConfig.AllowInventoryWhileSleeping && IsLyingDownZS();
+    }
+
 	// Triggered on both client & server when player uses an emote
 	override bool PlayEmote(int id)
 	{
@@ -21,12 +31,6 @@ modded class EmoteManager
 		if (playEmote && id == EmoteConstants.ID_EMOTE_LYINGDOWN && m_Player.GetSimulationTimeStamp() >= 300)
 		{
 			m_Player.GetZenSleepManager().OnStartSleep();
-
-			if (GetZenSleepConfig().ClientEffectsConfig.AllowInventoryWhileSleeping) // Allow inventory access if permitted by server config
-			{
-				m_InventoryAccessLocked = false;
-				m_Player.SetInventorySoftLock(false);
-			}
 		}
 
 		return playEmote;
@@ -50,10 +54,15 @@ modded class EmoteManager
 		}
 	}
 
-	/*override void SetEmoteLockState(bool state)
-	{
-		super.SetEmoteLockState(state);
+	// A little hacky, but it works with minimal code.
+	// If states match in vanilla SetEmoteLockState, inventory soft lock is not triggered. 
+	// Then we handle the prevention of inventory.close() in playerbase.c if lie down emote is active. 
+	// This allows 
+	override void SetEmoteLockState(bool state)
+    {
+		if (GetZenSleepConfig().ClientEffectsConfig.AllowInventoryWhileSleeping)
+			m_InventoryAccessLocked = state;
 
-		// hmmm.. overriding this doesn't stop inventory closing while sleeping
-	}*/
+		super.SetEmoteLockState(state);
+    }
 }

@@ -39,12 +39,19 @@ class ZenSleepManager
 
 	void Init()
 	{
-		m_MovementState = new HumanMovementState();
 		#ifdef SERVER
+		#ifdef ZENMODPACK
+		if (!ZenModEnabled("ZenSleep"))
+		{
+			return;
+		}
+		#endif
 		m_EffectHandlerServer = new ZenSleepEffectHandlerServer(m_Player);
 		#else
 		m_VisualEffectHandlerClient = new ZenSleepVisualEffectHandlerClient(m_Player);
 		#endif
+
+		m_MovementState = new HumanMovementState();
 		m_DeltaTime = 0;
 		m_SleepCondition = ZenSleepState.AWAKE;
 		m_SleepStartTimestamp = -1;
@@ -155,6 +162,7 @@ class ZenSleepManager
 		m_StatFatigueState = state;
 	}
 
+	// 1 = full white, 2 = gapped, 3 = yellow, 4 = red, 5 = red flashing
 	int GetFatigueStatState()
 	{
 		return m_StatFatigueState;

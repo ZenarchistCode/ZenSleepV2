@@ -4,6 +4,15 @@ modded class ModifiersManager
 	{
 		super.Init();
 
+		#ifdef SERVER
+		#ifdef ZENMODPACK
+		if (!ZenModEnabled("ZenSleep"))
+		{
+			return;
+		}
+		#endif
+		#endif
+
 		AddModifier(new ZenFatigueMdfr);
 	}
 }

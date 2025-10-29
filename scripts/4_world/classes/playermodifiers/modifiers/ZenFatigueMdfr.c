@@ -10,7 +10,7 @@ class ZenFatigueMdfr extends ModifierBase
 		m_TickIntervalActive 	= 1;
 		#ifdef SERVER
 		m_ZenSleepDrainSpeed	= ZenSleepConstants.FATIGUE_DRAIN_BASE_RATE * GetZenSleepConfig().DrainConfig.GlobalDrainMultiplier;
-		#else // Should only apply in offline mode, which I never code/test in because I'm retarded and can never get it working: 
+		#else // Should only apply in offline mode: 
 		m_ZenSleepDrainSpeed	= ZenSleepConstants.FATIGUE_DRAIN_BASE_RATE;
 		#endif
 		DisableDeactivateCheck();
@@ -41,12 +41,41 @@ class ZenFatigueMdfr extends ModifierBase
 	{
 		if (player.GetZenSleepManager().IsFatigueDrainPaused())
 		{
+			player.GetStaminaHandler().DeactivateRecoveryModifier(ZenSleepEnums.ZENSLEEP_STAMINA_MDFR);
 			return;
 		}
 
 		float fatigueBuffDebuff = 1.0;
 		float fatigueCurrent = player.GetStatZenFatigue().Get();
 		float fatigueSpeed;
+		float staminaRecoveryMod = -1;
+
+		if (fatigueCurrent < ZenSleepConstants.SL_FATIGUE_CRITICAL)
+		{
+			staminaRecoveryMod = GetZenSleepConfig().ModifiersConfig.StaminaRecoveryModifiers.Get("RedFlashing");
+		}
+		else
+		if (fatigueCurrent < ZenSleepConstants.SL_FATIGUE_LOW)
+		{
+			staminaRecoveryMod = GetZenSleepConfig().ModifiersConfig.StaminaRecoveryModifiers.Get("Red");
+		}
+		else 
+		if (fatigueCurrent < ZenSleepConstants.SL_FATIGUE_NORMAL)
+		{
+			staminaRecoveryMod = GetZenSleepConfig().ModifiersConfig.StaminaRecoveryModifiers.Get("Yellow");
+		}
+
+		if (staminaRecoveryMod > 0)
+		{
+			//ZenFunctions.DebugMessage("staminaRecoveryMod=" + staminaRecoveryMod);
+			player.GetStaminaHandler().m_RegisteredRecoveryModifiers.Set(ZenSleepEnums.ZENSLEEP_STAMINA_MDFR, staminaRecoveryMod);
+			player.GetStaminaHandler().ActivateRecoveryModifier(ZenSleepEnums.ZENSLEEP_STAMINA_MDFR);
+		}
+		else 
+		{
+			//ZenFunctions.DebugMessage("deactivate=" + staminaRecoveryMod);
+			player.GetStaminaHandler().DeactivateRecoveryModifier(ZenSleepEnums.ZENSLEEP_STAMINA_MDFR);
+		}
 
 		// Sleeping (gain)
 		if (player.GetZenSleepManager().IsSleeping())
