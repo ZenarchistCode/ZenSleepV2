@@ -29,6 +29,14 @@ modded class PlayerBase
 			m_SoundEffectHandlerClient = new ZenSleepSoundEffectHandlerClient(this);
 	}
 
+	bool AllowZenSleepInventory()
+	{
+		if (GetZenSleepManager() && GetZenSleepManager().IsLyingDown() && GetZenSleepConfig() && GetZenSleepConfig().ClientEffectsConfig && GetZenSleepConfig().ClientEffectsConfig.AllowInventoryWhileSleeping)
+			return true; // Don't close or softlock inventory while lie down emote is active.
+
+		return false;
+	}
+
 	override void CloseInventoryMenu()
 	{
 		#ifdef ZENMODPACK
@@ -39,10 +47,25 @@ modded class PlayerBase
 		}
 		#endif
 
-		if (GetZenSleepManager() && GetZenSleepManager().IsLyingDown() && GetZenSleepConfig() && GetZenSleepConfig().ClientEffectsConfig && GetZenSleepConfig().ClientEffectsConfig.AllowInventoryWhileSleeping)
-			return; // Don't close inventory while lie down emote is active.
+		if (AllowZenSleepInventory())
+			return;
 
 		super.CloseInventoryMenu();
+	}
+
+	override bool IsInventorySoftLocked()
+	{
+		#ifdef ZENMODPACK
+		if (!ZenModEnabled("ZenSleep"))
+		{
+			return super.IsInventorySoftLocked();
+		}
+		#endif
+
+		if (AllowZenSleepInventory())
+			return false;
+
+		return super.IsInventorySoftLocked();
 	}
 
 	ZenSleepManager GetZenSleepManager()

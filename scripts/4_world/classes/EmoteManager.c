@@ -27,10 +27,15 @@ modded class EmoteManager
 		}
 		#endif
 
-		// If the player has used the lie down emote, prepare for sleep (GetSimulationTimeStamp() >= 300 allows using sleeping emote upon login without triggering sleep fx - used for compatibility with my Immersive Login mod)
-		if (playEmote && id == EmoteConstants.ID_EMOTE_LYINGDOWN && m_Player.GetSimulationTimeStamp() >= 300)
+		if (playEmote && id == EmoteConstants.ID_EMOTE_LYINGDOWN)
 		{
-			m_Player.GetZenSleepManager().OnStartSleep();
+			// If the player has used the lie down emote, prepare for sleep 
+			// GetSimulationTimeStamp() >= 300ms allows using sleeping emote upon login without triggering sleep fx.
+			// used for compatibility with my Immersive Login mod
+			if (m_Player.GetSimulationTimeStamp() >= 300)
+			{
+				m_Player.GetZenSleepManager().OnStartSleep();
+			}
 		}
 
 		return playEmote;
@@ -53,16 +58,4 @@ modded class EmoteManager
 			m_Player.GetZenSleepManager().OnStopSleep();
 		}
 	}
-
-	// A little hacky, but it works with minimal code.
-	// If states match in vanilla SetEmoteLockState, inventory soft lock is not triggered. 
-	// Then we handle the prevention of inventory.close() in playerbase.c if lie down emote is active. 
-	// This allows 
-	override void SetEmoteLockState(bool state)
-    {
-		if (GetZenSleepConfig() && GetZenSleepConfig().ClientEffectsConfig && GetZenSleepConfig().ClientEffectsConfig.AllowInventoryWhileSleeping)
-			m_InventoryAccessLocked = state;
-
-		super.SetEmoteLockState(state);
-    }
 }
