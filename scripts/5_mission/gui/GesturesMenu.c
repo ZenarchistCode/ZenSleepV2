@@ -71,7 +71,14 @@ modded class GesturesMenu
 			    input_text.SetColor(ARGB(255,250,250,0));
             }
 		}
-	} 
+	}
+
+    // overriding method that is causing troubles
+	override static void CloseMenu()
+	{
+		//instance.OnMenuRelease(); // <-- buggy line is commented out
+		GetGame().GetUIManager().Back();
+	}
 }
 
 modded class GestureMenuItem
