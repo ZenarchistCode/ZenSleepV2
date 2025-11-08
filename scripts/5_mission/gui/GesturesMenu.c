@@ -1,6 +1,16 @@
+/* 
+This code triggers a weird runtime error when enabled, despite not touching the OnMenuRelease function in this code:
+
+scripts/5_mission_gui/gesturesmenu.c(162): Method 'OnMenuRelease' is protected
+
+I only seem to get this error on servers which are not running my full modpack. Not sure what to make of it,
+so I've disabled it for now til I have time to figure out what's going on.
+*/
+
+/*
 modded class GesturesMenu
 {
-    override protected void GetGestureItems(out array<ref GestureMenuItem> gesture_items, GestureCategories category)
+    override void GetGestureItems(out array<ref GestureMenuItem> gesture_items, GestureCategories category)
 	{
         array<ref GestureMenuItem> gesture_items = new array<ref GestureMenuItem>;
 
@@ -22,7 +32,7 @@ modded class GesturesMenu
         }
     }
 
-    override protected void UpdateQuickbarItemCard(GestureMenuItem gesture_item)
+    override void UpdateQuickbarItemCard(GestureMenuItem gesture_item)
 	{
         super.UpdateQuickbarItemCard(gesture_item);
 
@@ -71,3 +81,4 @@ modded class GestureMenuItem
         m_Name = name;
     }
 }
+*/

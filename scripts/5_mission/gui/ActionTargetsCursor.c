@@ -12,7 +12,7 @@ modded class ActionTargetsCursor
 		}
 		#endif
 
-		if (m_Player && m_Player.GetZenSleepManager().IsLyingDown())
+		if (m_Player && m_Player.GetZenSleepManager() && m_Player.GetZenSleepManager().IsLyingDown())
 		{
 			m_Hidden = true;
 		}
