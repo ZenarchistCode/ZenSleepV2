@@ -36,6 +36,12 @@ class ActionZenSleepOnBed : ActionInteractBase
 		return true;
 	}
 
+    override void CreateConditionComponents()  
+	{
+		m_ConditionItem 	= new CCINone();
+		m_ConditionTarget 	= new CCTCursor();
+	}
+
     override bool ActionCondition(PlayerBase player, ActionTarget target, ItemBase item)
     {
         if (player.GetItemInHands() || !target)
@@ -44,13 +50,13 @@ class ActionZenSleepOnBed : ActionInteractBase
         Object targetObject = target.GetObject();
         if (!targetObject)
             return false;
+
+		if (targetObject.IsInherited(ZenSleepingBagDeployed_Base) || targetObject.IsInherited(ZenSleepingBagStatic_Base))
+			return true;
 		
 		#ifdef ZenModPack
 		if (!ZenModEnabled("ZenSleep"))
 		{
-			if (targetObject.IsInherited(ZenSleepingBagDeployed_Base))
-				return true;
-			
 			#ifdef TerjeMedicine
 			TerjeSleepingBag terjeBag = TerjeSleepingBag.Cast(targetObject);
 			if (terjeBag && terjeBag.CanBePacked())
