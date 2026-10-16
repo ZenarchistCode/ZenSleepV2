@@ -4,13 +4,13 @@ modded class JMPlayerForm
 	UIActionSlider m_ZenSleep;
 	bool m_ZenSleepUpdated;
 
-	override private Widget InitActionWidgetsStats(Widget actionsParent)
+	override protected Widget InitActionWidgetsStats(Widget actionsParent)
 	{
 		Widget parent = super.InitActionWidgetsStats(actionsParent);
 
-		if (!m_ZenSleep && m_Health)
+		if (!m_ZenSleep && m_Stamina)
 		{
-			Widget parentWidgie = m_Health.GetLayoutRoot().GetParent();
+			Widget parentWidgie = m_Stamina.GetLayoutRoot().GetParent();
 			m_ZenSleep = UIActionManager.CreateSlider(parentWidgie, "ZenSleep:", 0, ZenSleepConstants.SL_FATIGUE_MAX, this, "Click_SetZenSleep");
 			m_ZenSleep.SetSliderWidth(0.5);
 		}
@@ -22,7 +22,7 @@ modded class JMPlayerForm
 	{
 		super.RefreshStats(force);
 
-		if (!m_SelectedInstance)
+		if (!m_SelectedInstance || !m_ZenSleep)
 			return;
 		
 		if (g_Game.IsClient() && m_SelectedInstance.GetDataLastUpdatedTime() < m_LastChangeTime)

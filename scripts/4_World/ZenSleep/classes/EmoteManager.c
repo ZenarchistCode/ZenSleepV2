@@ -5,23 +5,13 @@ modded class EmoteManager
 		return m_Callback != NULL && m_Callback.m_callbackID == DayZPlayerConstants.CMD_GESTUREFB_LYINGDOWN && m_bEmoteIsPlaying;
 	}
 
-	bool ShouldAllowInvWhileSleepingZS()
-    {
-        #ifdef ZenModPack
-        if (!ZenModEnabled("ZenSleep")) 
-			return false;
-        #endif
-		
-		if (!GetZenSleepConfig().ClientEffectsConfig)
-			return false;
-
-        return GetZenSleepConfig().ClientEffectsConfig.AllowInventoryWhileSleeping && IsLyingDownZS();
-    }
-
 	// Triggered on both client & server when player uses an emote
 	override bool PlayEmote(int id)
 	{
 		bool playEmote = super.PlayEmote(id);
+
+		if (!ZenSleepCompatibility.IsZenSleepEnabled() || !m_Player.GetZenSleepManager())
+			return playEmote;
 
 		#ifdef ZenModPack
 		if (!ZenModEnabled("ZenSleep"))
@@ -48,6 +38,9 @@ modded class EmoteManager
 	{
 		int lastGesture = m_CurrentGestureID;
 		super.OnEmoteEnd();
+
+		if (!ZenSleepCompatibility.IsZenSleepEnabled() || !m_Player.GetZenSleepManager())
+			return;
 
 		#ifdef ZenModPack
 		if (!ZenModEnabled("ZenSleep"))

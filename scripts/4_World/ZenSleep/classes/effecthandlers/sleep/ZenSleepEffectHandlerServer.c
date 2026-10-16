@@ -36,6 +36,7 @@ class ZenSleepEffectHandlerServer extends ZenSleepEffectHandlerBase
 
 		if (m_Player.GetZenSleepManager().IsSleeping())
 		{
+
 			// Sleeping behaviour 
 			int arrayID;
 			int arrayElement;
@@ -240,6 +241,13 @@ class ZenSleepEffectHandlerServer extends ZenSleepEffectHandlerBase
 	void SetPlayerUncon()
 	{
 		m_UnconQueued = false;
+		#ifdef TERJE_MEDICINE_MOD
+		if (ZenSleepCompatibility.OverridesTerje())
+		{
+			m_Player.GetTerjeHealth().SetShock(0, TerjeDamageSource.SLEEPING);
+			return;
+		}
+		#endif
 		m_Player.GiveShock(-100);
 		//m_Player.m_UnconsciousEndTime = Math.RandomFloatInclusive(-30, -60); // Doesn't work? Used to. TODO: Find a new way.
 	}

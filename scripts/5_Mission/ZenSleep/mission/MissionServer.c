@@ -19,8 +19,8 @@ modded class MissionServer
 		}
 		#endif
 
-		if (newPlayer)
-			newPlayer.GetStatZenFatigue().Set(ZenSleepConstants.SL_FATIGUE_MAX * (Math.Clamp(GetZenSleepConfig().GeneralConfig.FreshSpawnFatiguePercent, 0, 100) / 100));
+		if (ZenSleepCompatibility.IsZenSleepEnabled() && newPlayer && newPlayer.GetStatZenFatigue())
+			newPlayer.GetStatZenFatigue().Set(ZenSleepConstants.SL_FATIGUE_MAX * (Math.Clamp(GetZenSleepConfig().GeneralSleepConfig.FreshSpawnFatiguePercent, 0, 100) / 100));
 	
 		return newPlayer;
 	}

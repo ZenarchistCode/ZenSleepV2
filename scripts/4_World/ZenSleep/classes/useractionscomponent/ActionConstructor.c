@@ -4,6 +4,8 @@ modded class ActionConstructor
     {
         super.RegisterActions(actions);
 
+        actions.Insert(ActionZenSleepInVehicle);
+
         //! SLEEPING BAGS
         actions.Insert(ActionZenPackSleepingBag);
         actions.Insert(ActionZenUnpackSleepingBag);

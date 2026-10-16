@@ -1,9 +1,23 @@
 // Override player movement speed based on config
 modded class InjuryAnimationHandler
 {
+	#ifdef TERJE_MEDICINE_MOD
+	override private eInjuryHandlerLevels CalculateSleepingState()
+	{
+		// Suppress only Terje's sleep limp; its injury/disease movement effects remain.
+		if (ZenSleepCompatibility.OverridesTerje())
+			return eInjuryHandlerLevels.PRISTINE;
+
+		return super.CalculateSleepingState();
+	}
+	#endif
+
 	override eInjuryHandlerLevels GetInjuryLevel(float health)
 	{
 		eInjuryHandlerLevels vanillaResult = super.GetInjuryLevel(health);
+
+		if (!ZenSleepCompatibility.IsZenSleepEnabled())
+			return vanillaResult;
 
 		#ifdef ZenModPack
 		if (!ZenModEnabled("ZenSleep"))

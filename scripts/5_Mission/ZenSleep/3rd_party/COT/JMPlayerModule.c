@@ -15,7 +15,7 @@ modded class JMPlayerModule
 		for (int i = 0; i < players.Count(); i++)
 		{
 			PlayerBase player = PlayerBase.Cast(players[i].PlayerObject);
-			if (!player)
+			if (!player || !player.GetStatZenFatigue())
 				continue;
 
 			player.GetStatZenFatigue().Set(player.GetStatZenFatigue().GetMax());

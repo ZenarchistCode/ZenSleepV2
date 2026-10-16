@@ -29,6 +29,16 @@ class ZenSleepManager
 	protected float m_FatigueSpeed;
 
 	protected bool m_IsPlayerAI;
+	protected bool m_VehicleSleepActive;
+	protected bool m_VehicleSleepLastSync;
+	protected bool m_VehicleSleepRequested;
+	protected bool m_VehicleSleepInputBlocked;
+	protected int m_VehicleSleepRequestID;
+	protected Transport m_SleepVehicle;
+	protected int m_SleepVehicleSeat;
+	protected float m_VehicleSleepHealth;
+	protected float m_VehicleSleepBlood;
+	protected float m_VehicleSleepShock;
 
 	void ZenSleepManager(PlayerBase player)
 	{
@@ -170,6 +180,18 @@ class ZenSleepManager
 
 	void SetSleepCondition(int condition, string notification = "")
 	{
+		if (m_VehicleSleepActive && condition == ZenSleepState.ASLEEP && m_SleepCondition != condition)
+			DebugVehicleSleep("Now asleep; normal recovery and sleep effects enabled.");
+
+		bool stopVehicleSleep = m_VehicleSleepActive && condition != ZenSleepState.ASLEEP;
+		if (stopVehicleSleep)
+		{
+			DebugVehicleSleep("Vehicle sleep ended; new state=" + condition);
+			m_VehicleSleepActive = false;
+			m_SleepVehicle = null;
+			OnStopSleep();
+		}
+
 		m_SleepCondition = condition;
 
 		if (m_SleepCondition == ZenSleepState.AWAKE)
@@ -180,7 +202,10 @@ class ZenSleepManager
 				StopAudioAttenuation();
 		}
 
-		if (notification != "" && GetZenSleepConfig().GeneralConfig.DisplaySleepMessages)
+		if (stopVehicleSleep && g_Game.IsServer())
+			DoServerToClientSync(true);
+
+		if (notification != "" && GetZenSleepConfig().GeneralSleepConfig.DisplaySleepMessages)
 			ZenSleepFunctions.ServerMessage(m_Player, notification);
 	}
 
@@ -191,6 +216,9 @@ class ZenSleepManager
 
 	bool RequiresServerToClientSync()
 	{
+		if (m_VehicleSleepActive != m_VehicleSleepLastSync)
+			return true;
+
 		if (m_StatFatigueTendency != m_StatFatigueTendencyLastSync)
 			return true;
 
@@ -203,9 +231,12 @@ class ZenSleepManager
 		return false;
 	}
 
-	protected void DoServerToClientSync()
+	protected void DoServerToClientSync(bool force = false)
 	{
-		if (!RequiresServerToClientSync())
+		if (!m_Player || !m_Player.GetIdentity())
+			return;
+
+		if (!force && !RequiresServerToClientSync())
 			return;
 
 		// Check if server effects manager needs a timer update 
@@ -220,16 +251,32 @@ class ZenSleepManager
 		// Send RPC data
 		ScriptRPC rpc = new ScriptRPC();
 		rpc.Write(packedInt);
-		rpc.Send(m_Player, ZenSleepEnums.RPC_SLEEP_STAT_UPDATE, false, m_Player.GetIdentity());
+		rpc.Write(m_VehicleSleepActive);
+		rpc.Write(m_VehicleSleepRequestID);
+		rpc.Send(m_Player, ZenSleepEnums.RPC_SLEEP_STAT_UPDATE, true, m_Player.GetIdentity());
 
 		// Sync latest values
+		m_VehicleSleepLastSync = m_VehicleSleepActive;
 		m_StatFatigueTendencyLastSync = m_StatFatigueTendency;
 		m_StatFatigueStateLastSync = m_StatFatigueState;
 		m_SleepConditionLastSync = m_SleepCondition;
 	}
 
-	void DoClientFromServerSync(int data)
+	void DoClientFromServerSync(int data, bool vehicleSleep = false, int requestID = 0)
 	{
+		// A wake request may overtake an earlier start acknowledgement on the round trip.
+		if (requestID < m_VehicleSleepRequestID)
+			return;
+
+		if (m_VehicleSleepRequested || m_VehicleSleepActive != vehicleSleep)
+			DebugVehicleSleep("Server state received: vehicleSleep=" + vehicleSleep + ", request=" + requestID);
+
+		bool wasVehicleSleeping = m_VehicleSleepActive;
+		bool wasVehicleRequested = IsVehicleSleepRequested();
+		m_VehicleSleepRequestID = requestID;
+		m_VehicleSleepRequested = false;
+		m_VehicleSleepActive = vehicleSleep;
+
 		// Read all 4 relevant fatigue stat info from single integer
 		ZenSleepFunctions.ReadPackedIntegerData3(data, m_StatFatigueTendency, m_StatFatigueState, m_SleepCondition);
 
@@ -240,12 +287,27 @@ class ZenSleepManager
 			if (m_SleepCondition == ZenSleepState.AWAKE)
 				OnStopSleep();
 		}
+
+		if (vehicleSleep && !wasVehicleSleeping)
+			OnStartSleep();
+		else if (!vehicleSleep && wasVehicleRequested)
+		{
+			OnStopSleep();
+			ClearVehicleSleepEffects();
+		}
 	}
 
 	void OnStartSleep()
 	{
-		if (!m_Player || !m_Player.GetStatZenFatigue())
+		if (!ZenSleepCompatibility.IsZenSleepEnabled() || !m_Player || !m_Player.GetStatZenFatigue())
 			return;
+
+		// This is a start limit, not a cap on recovery once already asleep.
+		if (ZenSleepCompatibility.OverridesTerje() && g_Game.IsDedicatedServer() && GetFatiguePercent() >= GetZenSleepConfig().GeneralSleepConfig.MaxFatiguePercentToAllowSleeping)
+		{
+			SetSleepCondition(ZenSleepState.AWAKE, GetZenSleepConfig().Messages.CantSleep + " " + GetZenSleepConfig().Messages.TooAwake);
+			return;
+		}
 
 		m_SleepStartTimestamp = g_Game.GetTime();
 		m_SleepStartFatigue = m_Player.GetStatZenFatigue().Get();
@@ -263,7 +325,7 @@ class ZenSleepManager
 		// Fail-safe check for a nearby bed within 1 meter if player forgot to use F to lie down on the object itself
 		if (g_Game.IsDedicatedServer())
 		{
-			if (!GetBed())
+			if (!m_VehicleSleepActive && !GetBed())
 			{
 				array<Object> nearest_objects = new array<Object>;
 				g_Game.GetObjectsAtPosition3D(m_Player.GetPosition(), 1.0, nearest_objects, NULL);
@@ -279,11 +341,25 @@ class ZenSleepManager
 					}
 				}
 			}
+			#ifdef TERJE_MEDICINE_MOD
+			// Reject illness/stimulant and Zen environmental blocks as soon as sleep is requested.
+			if (ZenSleepCompatibility.OverridesTerje())
+				CheckWakeUpConditions();
+			#endif
 		}
 	}
 
 	bool CanSleepOnBedObject(Object object)
 	{
+		if (!ZenSleepCompatibility.IsZenSleepEnabled() || !object)
+			return false;
+
+		#ifdef TERJE_MEDICINE_MOD
+		TerjeSleepingBag terjeBag = TerjeSleepingBag.Cast(object);
+		if (terjeBag)
+			return terjeBag.CanBePacked() && !terjeBag.IsRuined();
+		#endif
+
 		#ifdef ZenModPack
 		if (!ZenModEnabled("ZenSleep"))
 			return false;
@@ -330,7 +406,7 @@ class ZenSleepManager
 
 	void ApplyAudioAttenuation()
 	{
-		if (m_Player && m_Player.GetMasterAttenuation() == "")
+		if (ZenSleepCompatibility.IsZenSleepEnabled() && m_Player && m_Player.GetMasterAttenuation() == "")
 			m_Player.SetMasterAttenuation("ZenSleepAttenuation");
 	}
 
@@ -375,7 +451,7 @@ class ZenSleepManager
 
 	void OnUpdateTickShared(float deltaTime)
 	{
-		if (IsAI())
+		if (!ZenSleepCompatibility.IsZenSleepEnabled() || IsAI())
 		{
 			return;
 		}
@@ -393,6 +469,7 @@ class ZenSleepManager
 	// Server-side player checks
 	protected void OnUpdateTickServer(float deltaTime)
 	{
+		// Vehicle interruptions are checked once per frame by PlayerBase.CommandHandler.
 		DoServerToClientSync();
 
 		// Check for drug effect before anything else.
@@ -425,14 +502,14 @@ class ZenSleepManager
 		m_DeltaTime = 0;
 
 		// Check if we're lying down.
-		if (!IsLyingDown() && GetSleepCondition() != ZenSleepState.ON_DRUGS)
+		if (!IsInSleepPosition() && GetSleepCondition() != ZenSleepState.ON_DRUGS)
 		{
 			SetSleepCondition(ZenSleepState.AWAKE);
 			return;
 		}
 
 		// Lying down, in sleep state
-		if (IsSleeping())
+		if (GetSleepCondition() == ZenSleepState.ASLEEP)
 		{
 			// Check for wake-up conditions
 			if (CheckWakeUpConditions())
@@ -575,10 +652,29 @@ class ZenSleepManager
 
 	// This method will check all the possible ways we can be woken up.
 	// It will select whichever wake-up call is triggered by the lowest fatigue level.
-	bool CheckWakeUpConditions()
+	bool CheckWakeUpConditions(bool debugVehicle = false)
 	{
 		if (!m_Player)
 			return false;
+
+		#ifdef TERJE_MEDICINE_MOD
+		if (ZenSleepCompatibility.OverridesTerje())
+		{
+			int terjeBlock = ZenSleepTerje.GetSleepBlock(m_Player);
+			if (terjeBlock != TerjeMedicineSleepingLevel.TERJESL_NONE)
+			{
+				string terjeMessage = GetZenSleepConfig().Messages.TooBuzzed;
+				if (terjeBlock == TerjeMedicineSleepingLevel.TERJESL_SICK)
+					terjeMessage = GetZenSleepConfig().Messages.TooSick;
+				else if (!ZenSleepTerje.HasStimulant(m_Player))
+					terjeMessage = GetZenSleepConfig().Messages.TooAwake;
+				if (debugVehicle || m_VehicleSleepActive)
+					DebugVehicleSleep("Action blocked by sleep rules: " + terjeMessage);
+				SetSleepCondition(ZenSleepState.AWAKE, GetZenSleepConfig().Messages.CantSleep + " " + terjeMessage);
+				return true;
+			}
+		}
+		#endif
 
 		string restMessage = "";
 
@@ -591,6 +687,8 @@ class ZenSleepManager
 		bool playerSick =  IsPlayerSick();
 		bool isNight = IsNightTime();
 		bool tooEnergized = playerFatigue >= m_Player.GetStatZenFatigue().GetMax() - 1 || (isNight && playerFatigue >= GetZenSleepConfig().GainConfig.MaxRestGain_Time_Night);
+		if (ZenSleepCompatibility.OverridesTerje())
+			tooEnergized = playerFatigue >= 100 || (isNight && playerFatigue >= GetZenSleepConfig().GainConfig.MaxRestGain_Time_Night);
 
 		// On drugs (ie. someone dosed us while sleeping the cheeky bastards)
 		if (IsFatigueDrainPaused() || m_InabilityToSleepEffectSecs > 0)
@@ -766,6 +864,8 @@ class ZenSleepManager
 		// If we have a rest message, it's time to wake up. Otherwise we keep on sleeping.
 		if (restMessage != "")
 		{
+			if (debugVehicle || m_VehicleSleepActive)
+				DebugVehicleSleep("Action blocked by sleep rules: " + restMessage);
 			int sleepState = ZenSleepState.AWAKE;
 			if (IsFatigueDrainPaused())
 				sleepState = ZenSleepState.ON_DRUGS;
@@ -775,6 +875,240 @@ class ZenSleepManager
 		}
 
 		return false;
+	}
+
+	// Vehicle rest shares the normal sleep loop without pretending to play a lie-down emote.
+	bool IsInSleepPosition()
+	{
+		return IsLyingDown() || (m_VehicleSleepActive && CanSleepInVehicle());
+	}
+
+	bool IsVehicleSleepActive()
+	{
+		return m_VehicleSleepActive;
+	}
+
+	bool IsVehicleSleepRequested()
+	{
+		return m_VehicleSleepRequested || m_VehicleSleepActive;
+	}
+
+	// Event-only diagnostics: no player-list broadcast and no dependency on ZenCore's debug toggle.
+	void DebugVehicleSleep(string message)
+	{
+		if (!GetZenSleepConfig().DebugMode)
+			return;
+
+		string prefix = "[ZenSleep vehicle][CLIENT] ";
+		if (g_Game.IsServer())
+			prefix = "[ZenSleep vehicle][SERVER] ";
+		Print(prefix + message);
+		if (g_Game.IsServer())
+			ZenSleepFunctions.ServerMessage(m_Player, prefix + message);
+		else if (m_Player && m_Player.IsControlledPlayer())
+			ZenFunctions.ZenClientMessage(prefix + message);
+	}
+
+	protected bool VehicleSleepBlocked(bool explain, string reason)
+	{
+		if (explain)
+			DebugVehicleSleep("Action blocked: " + reason);
+		return false;
+	}
+
+	bool CanSleepInVehicle(bool explain = false)
+	{
+		if (!ZenSleepCompatibility.IsZenSleepEnabled())
+			return VehicleSleepBlocked(explain, "ZenSleep disabled by ZenModPack selector or Terje override setting");
+		if (!GetZenSleepConfig().GeneralSleepConfig.AllowVehicleSleep)
+			return VehicleSleepBlocked(explain, "GeneralSleepConfig.AllowVehicleSleep is disabled");
+		if (IsAI())
+			return VehicleSleepBlocked(explain, "AI player");
+		if (!m_Player || !m_Player.IsAlive() || m_Player.IsPlayerDisconnected())
+			return VehicleSleepBlocked(explain, "player missing, dead or disconnected");
+		if (m_Player.IsUnconscious())
+			return VehicleSleepBlocked(explain, "player unconscious");
+
+		HumanCommandVehicle command = m_Player.GetCommand_Vehicle();
+		if (!command)
+			return VehicleSleepBlocked(explain, "player is not in a vehicle seat command");
+		if (command.IsGettingIn() || command.IsGettingOut() || command.IsSwitchSeat())
+			return VehicleSleepBlocked(explain, "entering, leaving or switching vehicle seats");
+
+		Transport transport = command.GetTransport();
+		if (!transport || transport.CrewMemberIndex(m_Player) < 0)
+			return VehicleSleepBlocked(explain, "vehicle or crew seat unavailable");
+
+		if (IsVehicleSleepDriver())
+		{
+			// Ignore normal parked-car physics jitter; use the same 1 km/h limit for starting and waking.
+			float speedKmh = GetVelocity(transport).Length() * 3.6;
+			if (speedKmh > 1.0)
+			{
+				if (explain && GetZenSleepConfig().DebugMode)
+					DebugVehicleSleep("Action blocked: car speed=" + speedKmh + " km/h (driver sleep limit: 1 km/h)");
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	bool IsVehicleSleepDriver()
+	{
+		HumanCommandVehicle command = m_Player.GetCommand_Vehicle();
+		if (!command || !command.GetTransport())
+			return false;
+
+		return command.GetTransport().CrewMemberIndex(m_Player) == 0 || command.GetVehicleSeat() == DayZPlayerConstants.VEHICLESEAT_DRIVER;
+	}
+
+	// The native action carries this ID to the server; no start RPC bypasses it.
+	int PrepareVehicleSleepRequest()
+	{
+		m_VehicleSleepRequestID++;
+		m_VehicleSleepRequested = true;
+		// Immediate local feedback, without starting fatigue recovery before server approval/delay.
+		if (GetVisualEffectHandlerClient())
+			GetVisualEffectHandlerClient().Update(0);
+		DebugVehicleSleep("Native action prepared; sending start request=" + m_VehicleSleepRequestID);
+		return m_VehicleSleepRequestID;
+	}
+
+	bool IsVehicleSleepInputBlocked()
+	{
+		return m_VehicleSleepInputBlocked;
+	}
+
+	void ReleaseVehicleSleepInput()
+	{
+		m_VehicleSleepInputBlocked = false;
+	}
+
+	void CancelVehicleSleepRequest(int requestID)
+	{
+		if (requestID == m_VehicleSleepRequestID && IsVehicleSleepRequested())
+			RequestVehicleWake("native action cancelled before client acknowledgement");
+	}
+
+	void RequestVehicleWake(string reason = "wake requested")
+	{
+		if (!g_Game.IsClient() || !m_Player || !m_Player.IsControlledPlayer() || !IsVehicleSleepRequested())
+			return;
+
+		DebugVehicleSleep("Wake requested: " + reason + ", previous request=" + m_VehicleSleepRequestID);
+		m_VehicleSleepRequestID++;
+		m_VehicleSleepRequested = false;
+		m_VehicleSleepInputBlocked = true;
+		m_VehicleSleepActive = false;
+		OnStopSleep();
+		SetSleepCondition(ZenSleepState.AWAKE);
+		ClearVehicleSleepEffects();
+
+		ScriptRPC rpc = new ScriptRPC();
+		rpc.Write(m_VehicleSleepRequestID);
+		rpc.Send(m_Player, ZenSleepEnums.RPC_VEHICLE_SLEEP_WAKE, true);
+	}
+
+	void HandleVehicleSleepRequest(bool start, int requestID)
+	{
+		if (!g_Game.IsServer())
+			return;
+		if (requestID <= m_VehicleSleepRequestID)
+		{
+			DebugVehicleSleep("Request ignored: stale/cancelled request=" + requestID + ", latest=" + m_VehicleSleepRequestID);
+			return;
+		}
+
+		DebugVehicleSleep("Request received: start=" + start + ", request=" + requestID);
+		m_VehicleSleepRequestID = requestID;
+		if (!start && m_VehicleSleepActive)
+		{
+			// SetSleepCondition sends the wake acknowledgement; avoid a duplicate RPC.
+			StopVehicleSleep("client wake request");
+			return;
+		}
+		if (start && m_VehicleSleepActive)
+			DebugVehicleSleep("Action blocked: already sleeping in vehicle");
+		if (start && !m_VehicleSleepActive && CanSleepInVehicle(true))
+		{
+			if (!m_Player.GetStatZenFatigue())
+				DebugVehicleSleep("Action blocked: Zen fatigue stat is unavailable");
+			else
+			{
+				SetBed(null);
+				if (GetFatiguePercent() >= GetZenSleepConfig().GeneralSleepConfig.MaxFatiguePercentToAllowSleeping)
+				{
+					DebugVehicleSleep("Action blocked: too awake (fatigue=" + GetFatiguePercent() + ", sleep limit=" + GetZenSleepConfig().GeneralSleepConfig.MaxFatiguePercentToAllowSleeping + ")");
+					SetSleepCondition(ZenSleepState.AWAKE, GetZenSleepConfig().Messages.CantSleep + " " + GetZenSleepConfig().Messages.TooAwake);
+				}
+				else if (!CheckWakeUpConditions(true))
+				{
+					m_VehicleSleepActive = true;
+					m_SleepVehicle = m_Player.GetCommand_Vehicle().GetTransport();
+					m_SleepVehicleSeat = m_SleepVehicle.CrewMemberIndex(m_Player);
+					m_VehicleSleepHealth = m_Player.GetHealth("", "Health");
+					m_VehicleSleepBlood = m_Player.GetHealth("", "Blood");
+					m_VehicleSleepShock = m_Player.GetHealth("", "Shock");
+					OnStartSleep();
+					if (m_VehicleSleepActive)
+						DebugVehicleSleep("Sleep accepted; waiting for the normal 5-second sleep delay.");
+				}
+			}
+		}
+
+		// Also acknowledge rejected starts and cancelled requests.
+		DoServerToClientSync(true);
+	}
+
+	void StopVehicleSleep(string reason = "sleep condition changed")
+	{
+		if (!m_VehicleSleepActive)
+			return;
+
+		DebugVehicleSleep("Wake forced: " + reason);
+		int condition = ZenSleepState.AWAKE;
+		if (IsFatigueDrainPaused())
+			condition = ZenSleepState.ON_DRUGS;
+		SetSleepCondition(condition);
+	}
+
+	void InterruptVehicleSleep(string reason = "sleep interrupted")
+	{
+		if (g_Game.IsServer())
+			StopVehicleSleep(reason);
+		else
+			RequestVehicleWake(reason);
+	}
+
+	void UpdateVehicleSleepServer()
+	{
+		if (!g_Game.IsServer() || !m_VehicleSleepActive)
+			return;
+
+		if (!CanSleepInVehicle(true))
+		{
+			StopVehicleSleep("vehicle eligibility lost");
+			return;
+		}
+
+		Transport transport = m_Player.GetCommand_Vehicle().GetTransport();
+		float health = m_Player.GetHealth("", "Health");
+		float blood = m_Player.GetHealth("", "Blood");
+		float shock = m_Player.GetHealth("", "Shock");
+		// Crashes and other scripts can subtract stats directly without calling EEHitBy.
+		if (transport != m_SleepVehicle || transport.CrewMemberIndex(m_Player) != m_SleepVehicleSeat || health < m_VehicleSleepHealth || blood < m_VehicleSleepBlood || shock < m_VehicleSleepShock)
+			StopVehicleSleep("vehicle/seat changed or health, blood or shock decreased");
+
+		m_VehicleSleepHealth = health;
+		m_VehicleSleepBlood = blood;
+		m_VehicleSleepShock = shock;
+	}
+
+	void ClearVehicleSleepEffects()
+	{
+		if (GetVisualEffectHandlerClient())
+			GetVisualEffectHandlerClient().ClearVehicleSleepEffects();
 	}
 
 	bool IsLyingDown()
@@ -803,7 +1137,14 @@ class ZenSleepManager
 
 	bool IsSleeping()
 	{
-		return IsLyingDown() && m_SleepCondition == ZenSleepState.ASLEEP;
+		bool sleeping = IsInSleepPosition() && m_SleepCondition == ZenSleepState.ASLEEP;
+		#ifdef TERJE_MEDICINE_MOD
+		// Terje's medical code must never observe valid sleep while its current
+		// illness rules block it, even between Zen's scheduled wake-up checks.
+		if (sleeping && ZenSleepCompatibility.OverridesTerje() && g_Game.IsDedicatedServer())
+			return !m_Player.IsUnconscious() && ZenSleepTerje.GetSleepBlock(m_Player) == TerjeMedicineSleepingLevel.TERJESL_NONE;
+		#endif
+		return sleeping;
 	}
 
 	float GetSleepStartFatigue()
@@ -835,31 +1176,64 @@ class ZenSleepManager
 
 		float quantity = data.m_Amount / data.m_Source.GetQuantityMax();
 
+		ApplyConfiguredItemEffects(edibleItem, quantity);
+	}
+
+	bool HasConfiguredItemEffect(ItemBase item)
+	{
+		if (!item)
+			return false;
+
+		int i;
+		for (i = 0; i < GetZenSleepConfig().ModifiersConfig.ModifierActivatedPercent.Count(); i++)
+			if (item.IsKindOf(GetZenSleepConfig().ModifiersConfig.ModifierActivatedPercent.GetKey(i)))
+				return true;
+		for (i = 0; i < GetZenSleepConfig().ModifiersConfig.ModifierDeactivatedPercent.Count(); i++)
+			if (item.IsKindOf(GetZenSleepConfig().ModifiersConfig.ModifierDeactivatedPercent.GetKey(i)))
+				return true;
+		for (i = 0; i < GetZenSleepConfig().ModifiersConfig.ModifierPausesSeconds.Count(); i++)
+			if (item.IsKindOf(GetZenSleepConfig().ModifiersConfig.ModifierPausesSeconds.GetKey(i)))
+				return true;
+
+		return false;
+	}
+
+	void ApplyConfiguredItemEffects(ItemBase item, float quantity)
+	{
 		int i;
 		string key;
-
 		for (i = 0; i < GetZenSleepConfig().ModifiersConfig.ModifierActivatedPercent.Count(); i++)
 		{
 			key = GetZenSleepConfig().ModifiersConfig.ModifierActivatedPercent.GetKey(i);
-			if (edibleItem.IsKindOf(GetZenSleepConfig().ModifiersConfig.ModifierActivatedPercent.GetKey(i)))
+			if (item.IsKindOf(key))
+				OnModifierActivate(key, quantity);
+		}
+
+		// A pause-only JSON entry is also an explicit override, including zero.
+		if (ZenSleepCompatibility.OverridesTerje())
+		{
+			for (i = 0; i < GetZenSleepConfig().ModifiersConfig.ModifierPausesSeconds.Count(); i++)
 			{
-				OnModifierActivate(GetZenSleepConfig().ModifiersConfig.ModifierActivatedPercent.GetKey(i), quantity);
+				key = GetZenSleepConfig().ModifiersConfig.ModifierPausesSeconds.GetKey(i);
+				if (!GetZenSleepConfig().ModifiersConfig.ModifierActivatedPercent.Contains(key) && item.IsKindOf(key))
+					OnModifierActivate(key, quantity);
 			}
 		}
 
 		for (i = 0; i < GetZenSleepConfig().ModifiersConfig.ModifierDeactivatedPercent.Count(); i++)
 		{
 			key = GetZenSleepConfig().ModifiersConfig.ModifierDeactivatedPercent.GetKey(i);
-			if (edibleItem.IsKindOf(GetZenSleepConfig().ModifiersConfig.ModifierDeactivatedPercent.GetKey(i)))
-			{
-				OnModifierDeactivate(GetZenSleepConfig().ModifiersConfig.ModifierDeactivatedPercent.GetKey(i), quantity);
-			}
+			if (item.IsKindOf(key))
+				OnModifierDeactivate(key, quantity);
 		}
 	}
 
-	void OnModifierActivate(string className, float quantity = 1.0)
+	void OnModifierActivate(string className, float quantity = 1.0, bool skipSleepGain = false)
 	{
-		if (!m_Player || IsAI() || !m_Player.GetStatZenFatigue())
+		if (!ZenSleepCompatibility.IsZenSleepEnabled() || !m_Player || IsAI() || !m_Player.GetStatZenFatigue())
+			return;
+
+		if (skipSleepGain && ZenSleepCompatibility.OverridesTerje())
 			return;
 
 		#ifdef ZenSleepDebug
@@ -868,7 +1242,7 @@ class ZenSleepManager
 		#endif
 
 		float gainAmount;
-		if (GetZenSleepConfig().ModifiersConfig.ModifierActivatedPercent.Find(className, gainAmount))
+		if (!skipSleepGain && GetZenSleepConfig().ModifiersConfig.ModifierActivatedPercent.Find(className, gainAmount))
 		{
 			m_Player.GetStatZenFatigue().Add(m_Player.GetStatZenFatigue().GetMax() * (gainAmount / 100) * quantity);
 		}
@@ -886,9 +1260,12 @@ class ZenSleepManager
 		}
 	}
 
-	void OnModifierDeactivate(string className, float quantity = 1.0)
+	void OnModifierDeactivate(string className, float quantity = 1.0, bool skipSleepGain = false)
 	{
-		if (!m_Player || IsAI())
+		if (!ZenSleepCompatibility.IsZenSleepEnabled() || !m_Player || IsAI())
+			return;
+
+		if (skipSleepGain && ZenSleepCompatibility.OverridesTerje())
 			return;
 
 		#ifdef ZenSleepDebug

@@ -19,6 +19,8 @@ class ZenSleepConfig_SyncPayload
 {
 	ref ZenSleepEffectsClientConfig ClientEffectsConfig;
 	bool DebugMode;
+	bool OverrideTerje;
+	bool AllowVehicleSleep;
 }
 
 class ZenSleepConfig : ZenConfigBase
@@ -31,7 +33,7 @@ class ZenSleepConfig : ZenConfigBase
 		g_ZenSleepConfig = this;
 	}
 
-	override string    	GetCurrentVersion()   		{ return "1.29.1"; }
+	override string    	GetCurrentVersion()   		{ return "1.29.4"; }
 	override bool		ShouldLoadOnServer() 		{ return true; }
 	override bool		ShouldSyncToClient()		
 	{ 
@@ -47,7 +49,35 @@ class ZenSleepConfig : ZenConfigBase
 	
 	override bool ReadJson(string path, out string err)
 	{
-		return JsonFileLoader<ZenSleepConfig>.LoadFile(path, this, err);
+		FileHandle file = OpenFile(path, FileMode.READ);
+		if (!file)
+		{
+			err = "Cannot open ZenSleep config: " + path;
+			return false;
+		}
+
+		string json;
+		ReadFile(file, json, 100000000);
+		CloseFile(file);
+		if (!JsonFileLoader<ZenSleepConfig>.LoadData(json, this, err))
+			return false;
+
+		// Inspect presence separately: DayZ deserializes omitted bools as false.
+		ZenSleepVehicleConfigMigration migration = new ZenSleepVehicleConfigMigration(json);
+		if (!GeneralSleepConfig)
+			GeneralSleepConfig = new ZenSleepGeneralConfig();
+		if (!migration.HasGeneralSetting)
+		{
+			GeneralSleepConfig.AllowVehicleSleep = true;
+			if (migration.HasLegacySetting)
+			{
+				ZenSleepLegacyVehicleConfig legacy = new ZenSleepLegacyVehicleConfig();
+				if (!JsonFileLoader<ZenSleepLegacyVehicleConfig>.LoadData(json, legacy, err))
+					return false;
+				GeneralSleepConfig.AllowVehicleSleep = legacy.AllowVehicleSleep;
+			}
+		}
+		return true;
 	}
 
 	override bool WriteJson(string path, out string err)
@@ -60,6 +90,8 @@ class ZenSleepConfig : ZenConfigBase
 		ZenSleepConfig_SyncPayload snap = new ZenSleepConfig_SyncPayload();
 		snap.ClientEffectsConfig = ClientEffectsConfig;
 		snap.DebugMode = DebugMode;
+		snap.OverrideTerje = OverrideTerje;
+		snap.AllowVehicleSleep = GeneralSleepConfig.AllowVehicleSleep;
 		
 		return JsonFileLoader<ZenSleepConfig_SyncPayload>.MakeData(snap, payload, err, false);
 	}
@@ -74,12 +106,16 @@ class ZenSleepConfig : ZenConfigBase
 
 		ClientEffectsConfig = snap.ClientEffectsConfig;
 		DebugMode = snap.DebugMode;
+		OverrideTerje = snap.OverrideTerje;
+		if (!GeneralSleepConfig)
+			GeneralSleepConfig = new ZenSleepGeneralConfig();
+		GeneralSleepConfig.AllowVehicleSleep = snap.AllowVehicleSleep;
 
 		return true;
 	}
 
 	// Main config data
-	ref ZenSleepGeneralConfig GeneralConfig;
+	ref ZenSleepGeneralConfig GeneralSleepConfig;
 	ref ZenSleepGainConfig GainConfig;
 	ref ZenSleepDrainConfig DrainConfig;
 	ref ZenSleepModifiers ModifiersConfig;
@@ -87,10 +123,11 @@ class ZenSleepConfig : ZenConfigBase
 	ref ZenSleepEffectsClientConfig ClientEffectsConfig;
 	ref ZenSleepMessages Messages;
 	bool DebugMode; // Turn this on when tweaking & testing important values
+	bool OverrideTerje; // Optional TerjeMedicine replacement. False leaves Terje in control; ignored without TerjeMedicine.
 
 	override void SetDefaults()
 	{
-		GeneralConfig			= new ZenSleepGeneralConfig();
+		GeneralSleepConfig			= new ZenSleepGeneralConfig();
 		DrainConfig				= new ZenSleepDrainConfig();
 		GainConfig				= new ZenSleepGainConfig();
 		ModifiersConfig			= new ZenSleepModifiers();
@@ -98,11 +135,13 @@ class ZenSleepConfig : ZenConfigBase
 		ClientEffectsConfig		= new ZenSleepEffectsClientConfig();
 		Messages				= new ZenSleepMessages();
 		DebugMode				= false;
+		OverrideTerje			= false;
 	}
 }
 
 class ZenSleepGeneralConfig
 {
+	bool AllowVehicleSleep = true; // Allow seated passengers and stationary drivers to sleep with their keybind. Synced explicitly to clients.
 	float SecondsAsleepUntilFullRestApprox = ZenSleepConstants.FATIGUE_BASE_SECONDS_TIL_RESTED; // How long it takes from zero energy to full rest (WITHOUT any of the below gain multipliers applied)
 	float FreshSpawnFatiguePercent = 70; // % of fatigue a fresh spawn begins with (100% = full rested)
 	float MaxFatiguePercentToAllowSleeping = 70; // Maximum % of fatigue to allow sleep (70%+ = full white, 16%+ = white with gap, 6%+ = yellow, 0.02%+ = red, < 0.02% = red flashing)

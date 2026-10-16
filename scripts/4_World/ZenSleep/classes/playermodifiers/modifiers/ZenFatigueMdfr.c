@@ -18,6 +18,9 @@ class ZenFatigueMdfr extends ModifierBase
 	
 	override bool ActivateCondition(PlayerBase player)
 	{
+		if (!ZenSleepCompatibility.IsZenSleepEnabled())
+			return false;
+
 		#ifdef ZenModPack
 		if (!ZenModEnabled("ZenSleep"))
 			return false;
@@ -43,6 +46,35 @@ class ZenFatigueMdfr extends ModifierBase
 	}
 
 	override void OnTick(PlayerBase player, float deltaT)
+	{
+		if (!ZenSleepCompatibility.IsZenSleepEnabled() || !player || !player.GetZenSleepManager() || !player.GetStatZenFatigue())
+			return;
+
+		#ifdef TERJE_MEDICINE_MOD
+		if (ZenSleepCompatibility.OverridesTerje())
+		{
+			if (!player.IsAlive() || !player.GetTerjeStats() || player.HasActiveTerjeStartScreen())
+				return;
+
+			float previousRest = player.GetTerjeStats().GetSleepingValue();
+			ZenSleepTerje.TickMedicine(player, deltaT);
+			if (player.GetZenSleepManager().GetSleepCondition() == ZenSleepState.ASLEEP)
+				player.GetZenSleepManager().CheckWakeUpConditions();
+
+			// Zen's curve, drain and post-unconsciousness award take priority.
+			TickZenFatigue(player, deltaT);
+			ZenSleepTerje.TickMedicalBenefits(player, deltaT);
+
+			ZenSleepTerje.UpdateState(player, previousRest);
+			ZenSleepTerje.TickExhaustion(player, deltaT);
+			return;
+		}
+		#endif
+
+		TickZenFatigue(player, deltaT);
+	}
+
+	void TickZenFatigue(PlayerBase player, float deltaT)
 	{
 		if (player.GetZenSleepManager().IsFatigueDrainPaused())
 		{
@@ -91,10 +123,15 @@ class ZenFatigueMdfr extends ModifierBase
 		// Sleeping (gain)
 		if (player.GetZenSleepManager().IsSleeping())
 		{
-			float timeAsleepMulti = player.GetZenSleepManager().GetSecondsAsleep() / GetZenSleepConfig().GeneralConfig.SecondsAsleepUntilFullRestApprox;
+			float timeAsleepMulti = player.GetZenSleepManager().GetSecondsAsleep() / GetZenSleepConfig().GeneralSleepConfig.SecondsAsleepUntilFullRestApprox;
 			float fatigueGain = ZenSleepConstants.FATIGUE_GAIN_BASE_RATE * ZenSleepConstants.SL_FATIGUE_MAX;
 			fatigueSpeed = fatigueGain * (timeAsleepMulti * timeAsleepMulti);
 			fatigueBuffDebuff = GetZenSleepGainModifier(player) * GetZenSleepConfig().GainConfig.GlobalGainMultiplier;
+			#ifdef TERJE_MEDICINE_MOD
+			// Fast Sleep is an additional skill benefit, not a competing base rate.
+			if (ZenSleepCompatibility.OverridesTerje())
+				fatigueSpeed *= ZenSleepTerje.GetFastSleepMultiplier(player);
+			#endif
 
 			// If bed is dry, add temperature buff slowly over time and eventually immunity boost 
 			if (player.GetZenSleepManager().HasBed(GameConstants.STATE_DAMP))
@@ -105,17 +142,28 @@ class ZenFatigueMdfr extends ModifierBase
 					player.GetStatHeatBuffer().Add(0.05 * deltaT);
 				}
 
-				#ifdef TerjeMedicine
+				#ifdef TERJE_MEDICINE_MOD
 				HandleTerjeMedicine(player, deltaT, GetZenSleepConfig().GainConfig.BedHealthGainPerSec * deltaT * fatigueBuffDebuff * -1);
 				#endif
 
-				if (GetZenSleepConfig().GainConfig.BedHealthMaxGain > 0 && player.GetHealth() < GetZenSleepConfig().GainConfig.BedHealthMaxGain && player.GetZenSleepManager().GetSecondsAsleep() >= GetZenSleepConfig().GainConfig.MinSecsAsleepToTriggerHealthRecovery)
+				if (!ZenSleepCompatibility.OverridesTerje() && GetZenSleepConfig().GainConfig.BedHealthMaxGain > 0 && player.GetHealth() < GetZenSleepConfig().GainConfig.BedHealthMaxGain && player.GetZenSleepManager().GetSecondsAsleep() >= GetZenSleepConfig().GainConfig.MinSecsAsleepToTriggerHealthRecovery)
 				{
 					player.AddHealth("GlobalHealth", "Health", GetZenSleepConfig().GainConfig.BedHealthGainPerSec * deltaT * fatigueBuffDebuff);
 				}
 
 				if (GetZenSleepConfig().GainConfig.MinSecsAsleepInBedToTriggerImmunityBoost > 0 && player.GetZenSleepManager().GetSecondsAsleep() >= GetZenSleepConfig().GainConfig.MinSecsAsleepInBedToTriggerImmunityBoost)
 				{
+					#ifdef TERJE_MEDICINE_MOD
+					if (ZenSleepCompatibility.OverridesTerje())
+					{
+						// Terje disables vanilla ImmunityBoost. Apply its vitamin-equivalent
+						// gain instead, preserving stronger/longer medicine already active.
+						float immunityForce, immunityTime;
+						player.GetTerjeStats().GetImmunityGainValue(immunityForce, immunityTime);
+						player.GetTerjeStats().SetImmunityGainValue(Math.Max(1, immunityForce), Math.Max(PlayerConstants.VITAMINS_LIFETIME_SECS, immunityTime));
+					}
+					else
+					#endif
 					if (!player.GetModifiersManager().IsModifierActive(eModifiers.MDF_IMMUNITYBOOST))
 					{
 						player.GetModifiersManager().ActivateModifier(eModifiers.MDF_IMMUNITYBOOST);
@@ -129,7 +177,7 @@ class ZenFatigueMdfr extends ModifierBase
 			fatigueBuffDebuff = GetZenSleepDrainModifier(player) * GetZenSleepConfig().DrainConfig.GlobalDrainMultiplier * -1;
 
 			// Red flashing
-			if (m_Player.GetStatZenFatigue().Get() <= ZenSleepConstants.SL_FATIGUE_CRITICAL && GetZenSleepConfig().DrainConfig.HealthLossPerSecRedFlashing > 0)
+			if (!ZenSleepCompatibility.OverridesTerje() && m_Player.GetStatZenFatigue().Get() <= ZenSleepConstants.SL_FATIGUE_CRITICAL && GetZenSleepConfig().DrainConfig.HealthLossPerSecRedFlashing > 0)
 			{
 				player.AddHealth("GlobalHealth", "Health", Math.AbsFloat(GetZenSleepConfig().DrainConfig.HealthLossPerSecRedFlashing) * deltaT * -1);
 			}
@@ -145,11 +193,13 @@ class ZenFatigueMdfr extends ModifierBase
 		m_Player.GetZenSleepManager().SetFatigueSpeed(fatigueSpeed);
 	}
 
-	#ifdef TerjeMedicine
+	#ifdef TERJE_MEDICINE_MOD
 	void HandleTerjeMedicine(PlayerBase player, float deltaT, float amount)
 	{
-		player.GetTerjeStats().SetMindDegradation(amount, 1);
+		if (!ZenSleepCompatibility.OverridesTerje() && player.GetTerjeStats())
+			player.GetTerjeStats().SetMindDegradation(amount, 1);
 	}
+
 	#endif
 
 	// Get fatigue stat drain speed based on player movement activity

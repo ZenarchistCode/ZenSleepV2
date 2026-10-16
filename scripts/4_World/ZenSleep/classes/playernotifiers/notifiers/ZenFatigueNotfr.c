@@ -28,8 +28,8 @@ class ZenFatigueNotfr extends NotifierBase
 		DEC_TRESHOLD_MED	= (ZenSleepConstants.DEC_TRESHOLD_MED * GetZenSleepConfig().DrainConfig.GlobalDrainMultiplier) * -1;
 		DEC_TRESHOLD_HIGH	= (ZenSleepConstants.DEC_TRESHOLD_HIGH * GetZenSleepConfig().DrainConfig.GlobalDrainMultiplier) * -1;
 		INC_TRESHOLD_LOW	= ZenSleepConstants.INC_TRESHOLD_LOW;
-		INC_TRESHOLD_MED	= ZenSleepConstants.INC_TRESHOLD_MED * (GetZenSleepConfig().GeneralConfig.SecondsAsleepUntilFullRestApprox / ZenSleepConstants.FATIGUE_BASE_SECONDS_TIL_RESTED) * GetZenSleepConfig().GainConfig.GlobalGainMultiplier;
-		INC_TRESHOLD_HIGH	= ZenSleepConstants.INC_TRESHOLD_HIGH * (GetZenSleepConfig().GeneralConfig.SecondsAsleepUntilFullRestApprox / ZenSleepConstants.FATIGUE_BASE_SECONDS_TIL_RESTED) * GetZenSleepConfig().GainConfig.GlobalGainMultiplier;
+		INC_TRESHOLD_MED	= ZenSleepConstants.INC_TRESHOLD_MED * (GetZenSleepConfig().GeneralSleepConfig.SecondsAsleepUntilFullRestApprox / ZenSleepConstants.FATIGUE_BASE_SECONDS_TIL_RESTED) * GetZenSleepConfig().GainConfig.GlobalGainMultiplier;
+		INC_TRESHOLD_HIGH	= ZenSleepConstants.INC_TRESHOLD_HIGH * (GetZenSleepConfig().GeneralSleepConfig.SecondsAsleepUntilFullRestApprox / ZenSleepConstants.FATIGUE_BASE_SECONDS_TIL_RESTED) * GetZenSleepConfig().GainConfig.GlobalGainMultiplier;
 		#endif
 	}
 
@@ -83,7 +83,7 @@ class ZenFatigueNotfr extends NotifierBase
 		debugMsg = debugMsg + " temp=" + Trunc(playerTemp) + "/b=" + Trunc(m_Player.GetStatHeatBuffer().Get());
 		debugMsg = debugMsg + " wet=" + playerWet;
 		debugMsg = debugMsg + " weight=" + Trunc(playerWeight) + "%";
-		if (m_Player.GetStatLevelZenFatigue() >= GetZenSleepConfig().GeneralConfig.FatigueLevelToNegativeImpactImmunity)
+		if (m_Player.GetStatLevelZenFatigue() >= GetZenSleepConfig().GeneralSleepConfig.FatigueLevelToNegativeImpactImmunity)
 			debugMsg = debugMsg + " imm=" + Trunc(m_Player.GetImmunity());
 		debugMsg = debugMsg + " hp=" + m_Player.GetHealth();
 		debugMsg = debugMsg + " tsleep=" + m_Player.GetZenSleepManager().GetSecondsAsleep() + "s";

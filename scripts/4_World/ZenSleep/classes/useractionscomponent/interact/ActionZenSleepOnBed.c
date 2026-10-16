@@ -51,13 +51,19 @@ class ActionZenSleepOnBed : ActionInteractBase
         if (!targetObject)
             return false;
 
+		#ifdef TERJE_MEDICINE_MOD
+		// Do not restore a Terje sleeping-bag action that its own setting disables.
+		if (ZenSleepCompatibility.OverridesTerje() && TerjeSleepingBag.Cast(targetObject) && !GetTerjeSettingBool(TerjeSettingsCollection.MEDICINE_ENABLE_SLEEPINGBAG_ACTION))
+			return false;
+		#endif
+
 		if (targetObject.IsInherited(ZenSleepingBagDeployed_Base) || targetObject.IsInherited(ZenSleepingBagStatic_Base))
 			return true;
 		
 		#ifdef ZenModPack
 		if (!ZenModEnabled("ZenSleep"))
 		{
-			#ifdef TerjeMedicine
+			#ifdef TERJE_MEDICINE_MOD
 			TerjeSleepingBag terjeBag = TerjeSleepingBag.Cast(targetObject);
 			if (terjeBag && terjeBag.CanBePacked())
 				return true;

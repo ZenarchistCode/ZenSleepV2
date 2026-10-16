@@ -23,6 +23,18 @@ class ZenSleepVisualEffectHandlerClient extends ZenSleepEffectHandlerBase
 		m_IsGoingUncon = false;
 	}
 
+	void ClearVehicleSleepEffects()
+	{
+		// Unconsciousness takes over immediately; ordinary waking uses the normal eye-opening fade.
+		if (m_Player.IsUnconscious())
+		{
+			if (m_SleepingVFX)
+				m_SleepingVFX.Stop();
+			return;
+		}
+		Update(0);
+	}
+
 	void SetFxID(int fxID)
 	{
 		// Unpack data from the single int
@@ -92,16 +104,18 @@ class ZenSleepVisualEffectHandlerClient extends ZenSleepEffectHandlerBase
 			}
 		}
 
+		// Vehicle eyes close immediately; gameplay IsSleeping() still waits for the server's 5-second delay.
+		bool sleepingVisuals = m_Player.GetZenSleepManager().IsSleeping() || m_Player.GetZenSleepManager().IsVehicleSleepRequested();
 		float blurFX = 0;
 		float sleepFX = 0;
 		float sleepFX_Speed = 1;
 
-		if (!m_Player.GetZenSleepManager().IsSleeping())
+		if (!sleepingVisuals)
 			sleepFX_Speed = 3;
 
 		if (m_Player.GetZenSleepManager().GetSleepCondition() != ZenSleepState.ON_DRUGS)
 		{
-			if (m_Player.GetZenSleepManager().IsSleeping() && cfg.AllowClosedEyesEffectSleeping)
+			if (sleepingVisuals && cfg.AllowClosedEyesEffectSleeping)
 			{
 				sleepFX = 1.0;
 			}
@@ -116,9 +130,9 @@ class ZenSleepVisualEffectHandlerClient extends ZenSleepEffectHandlerBase
 					blurFX = (cfg.AmountToBlurWhenRedFlashing / 100) * percentTimeSpentRedFlashing;
 				}
 
-				if (!m_Player.GetZenSleepManager().IsSleeping() && cfg.AmountToVignetteWhenRedFlashing > 0)
+				if (!sleepingVisuals && cfg.AmountToVignetteWhenRedFlashing > 0)
 				{
-					if (!m_Player.GetZenSleepManager().IsSleeping())
+					if (!sleepingVisuals)
 					{
 						sleepFX = (cfg.AmountToVignetteWhenRedFlashing / 100) * percentTimeSpentRedFlashing;
 						sleepFX_Speed = 0.4;
@@ -134,7 +148,7 @@ class ZenSleepVisualEffectHandlerClient extends ZenSleepEffectHandlerBase
 					m_TimeSpentRed += deltaTime;
 					float percentTimeSpentRed = Math.Clamp(m_TimeSpentRed / ZenSleepConstants.FATIGUE_MAX_FX_TIMER, 0.5, 1.0);
 
-					if (!m_Player.GetZenSleepManager().IsSleeping() && cfg.AmountToVignetteWhenRed > 0)
+					if (!sleepingVisuals && cfg.AmountToVignetteWhenRed > 0)
 					{
 						sleepFX = (cfg.AmountToVignetteWhenRed / 100) * percentTimeSpentRed;
 						sleepFX_Speed = 0.25;

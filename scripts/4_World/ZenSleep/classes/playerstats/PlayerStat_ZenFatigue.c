@@ -23,7 +23,7 @@ modded class PlayerStatsPCO_current
 
 		// For Namalsk compatibility. Registering multiple modded stats can create conflicting stat indexes, so just append the last registered stat.
 		m_ZenFatigueIndex = m_PlayerStats.Count();
-		RegisterStat(m_ZenFatigueIndex, new PlayerStat<float>(0, ZenSleepConstants.SL_FATIGUE_MAX, ZenSleepConstants.SL_FATIGUE_MAX, "ZenSleep", EPSstatsFlags.EMPTY));
+		RegisterStat(m_ZenFatigueIndex, new ZenSleepFatigueStat(0, ZenSleepConstants.SL_FATIGUE_MAX, ZenSleepConstants.SL_FATIGUE_MAX, "ZenSleep", EPSstatsFlags.EMPTY));
 	}
 }
 

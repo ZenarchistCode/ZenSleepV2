@@ -26,6 +26,8 @@ modded class JMPlayerInstance
 		return m_ZenSleep;
 	}
 
+	// Use the installed COT version's sync API; older COT uses the health hooks.
+	#ifndef COT_ONRECEIVE_PROPER
 	override void OnSendHealth(ParamsWriteContext ctx)
 	{
 		super.OnSendHealth(ctx);
@@ -39,5 +41,21 @@ modded class JMPlayerInstance
 
 		ctx.Read(m_ZenSleep);
 	}
+	#else
+	override void OnSendStatus(ParamsWriteContext ctx)
+	{
+		super.OnSendStatus(ctx);
+
+		ctx.Write(m_ZenSleep);
+	}
+
+	override bool OnReceiveStatus(ParamsReadContext ctx)
+	{
+		if (!super.OnReceiveStatus(ctx))
+			return false;
+
+		return ctx.Read(m_ZenSleep);
+	}
+	#endif
 }
 #endif

@@ -36,6 +36,7 @@ class CfgMods
 		author = "Zenarchist";
 		type = "mod";
 		storageVersion = 1;
+		inputs = "ZenSleep/data/inputs.xml";
 		defines[]=
 		{
 			//"ZenSleepDebug"
@@ -480,7 +481,9 @@ class CfgVehicles
 		overdosedIncrement = 0.55;
 		medicalItem=1;
 		medSkillExpAddToSelf=50;
-		medicalInjectorsCategory=1;		
+		medicalInjectorsCategory=1;
+		medSleepingIncrementValue = -10000;
+		medSleepingIncrementTimeSec = 1.0; // Time per 1ml
 	};
 	class ZenSleep_Amphetamine: Inventory_Base
 	{
@@ -575,6 +578,9 @@ class CfgVehicles
 		medicalItem=1;
 		medSkillExpAddToSelf=50;
 		medicalInjectorsCategory=1;
+		// Terje
+		medSleepingIncrementValue = 10000;
+		medSleepingIncrementTimeSec = 1.0; // Time per 1ml
 	};
 };
 

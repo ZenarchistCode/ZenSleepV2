@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<modded_inputs>
+	<inputs>
+		<actions>
+			<input name="UAZenSleepVehicle" loc="Sleep / wake up in vehicle" />
+		</actions>
+		<sorting name="ZEN" loc="ZEN">
+			<input name="UAZenSleepVehicle" />
+		</sorting>
+	</inputs>
+	<preset>
+		<input name="UAZenSleepVehicle">
+			<btn name="kZ" />
+		</input>
+	</preset>
+</modded_inputs>

@@ -31,6 +31,9 @@ modded class PlayerBase
 
 	bool AllowZenSleepInventory()
 	{
+		if (!ZenSleepCompatibility.IsZenSleepEnabled())
+			return false;
+
 		if (GetZenSleepManager() && GetZenSleepManager().IsLyingDown() && GetZenSleepConfig() && GetZenSleepConfig().ClientEffectsConfig && GetZenSleepConfig().ClientEffectsConfig.AllowInventoryWhileSleeping)
 			return true; // Don't close or softlock inventory while lie down emote is active.
 
@@ -75,6 +78,9 @@ modded class PlayerBase
 
 	void SetZenSleepFxID(int id)
 	{
+		if (!ZenSleepCompatibility.IsZenSleepEnabled())
+			return;
+
 		#ifdef ZenModPack
 		if (!ZenModEnabled("ZenSleep"))
 		{
@@ -129,9 +135,38 @@ modded class PlayerBase
 		return superConsume;
 	}
 
+	override void CommandHandler(float pDt, int pCurrentCommandID, bool pCurrentCommandFinished)
+	{
+		super.CommandHandler(pDt, pCurrentCommandID, pCurrentCommandFinished);
+
+		// Only active vehicle sleepers need per-frame motion/damage checks.
+		if (m_ZenSleepManager && m_ZenSleepManager.IsVehicleSleepActive())
+			m_ZenSleepManager.UpdateVehicleSleepServer();
+	}
+
+	override void OnUnconsciousStart()
+	{
+		if (GetZenSleepManager())
+			GetZenSleepManager().InterruptVehicleSleep("player became unconscious");
+
+		super.OnUnconsciousStart();
+	}
+
+	override void EEKilled(Object killer)
+	{
+		if (GetZenSleepManager())
+			GetZenSleepManager().InterruptVehicleSleep("player died");
+
+		super.EEKilled(killer);
+	}
+
 	override void OnUnconsciousStop(int pCurrentCommandID)
 	{
 		super.OnUnconsciousStop(pCurrentCommandID);
+
+		// Zen's configured wake-up award replaces Terje's continuous unconscious gain.
+		if (!ZenSleepCompatibility.IsZenSleepEnabled())
+			return;
 
 		#ifdef ZenModPack
 		if (!ZenModEnabled("ZenSleep"))
@@ -179,6 +214,9 @@ modded class PlayerBase
 	{
 		super.OnVariablesSynchronized();
 
+		if (!ZenSleepCompatibility.IsZenSleepEnabled())
+			return;
+
 		// Trigger ZenSleep effect sync
 		if (m_ZenSleepFxID != m_LastZenSleepFxID)
 		{
@@ -200,6 +238,8 @@ modded class PlayerBase
 	{
 		super.SetActions(InputActionMap);
 
+		AddAction(ActionZenSleepInVehicle, InputActionMap);
+
 		//! SLEEPING BAGS
 		AddAction(ActionZenPackSleepingBag, InputActionMap);
 		AddAction(ActionZenSleepOnBed, InputActionMap);
@@ -207,9 +247,12 @@ modded class PlayerBase
 
 	override void EEHitBy(TotalDamageResult damageResult, int damageType, EntityAI source, int component, string dmgZone, string ammo, vector modelPos, float speedCoef)
 	{
+		if (GetZenSleepManager())
+			GetZenSleepManager().InterruptVehicleSleep("player hit/damaged");
+
 		super.EEHitBy(damageResult, damageType, source, component, dmgZone, ammo, modelPos, speedCoef);
 		
-		if (damageResult != null)
+		if (damageResult != null && GetZenSleepManager())
 		{
 			GetZenSleepManager().EEHitBy(damageResult, damageType, source, component, dmgZone, ammo, modelPos, speedCoef);
 		}
@@ -223,6 +266,16 @@ modded class PlayerBase
 	{
 		return ZenSleep_FindFloatStatByLabel("ZenSleep");
 	}
+
+	#ifdef TERJE_MEDICINE_MOD
+	override void OnTerjePlayerRespawned()
+	{
+		super.OnTerjePlayerRespawned();
+		if (ZenSleepCompatibility.OverridesTerje() && GetTerjeStats() && GetStatZenFatigue())
+			GetStatZenFatigue().Set(GetStatZenFatigue().GetMax() * Math.Clamp(GetZenSleepConfig().GeneralSleepConfig.FreshSpawnFatiguePercent, 0, 100) / 100);
+	}
+
+	#endif
 
 	// For Namalsk frostbite/other mod compatibility - get stat by label, not index/id, 
 	// which can conflict when multiple mods use PCO to register new stats.
@@ -248,6 +301,9 @@ modded class PlayerBase
 
 	EStatLevels GetStatLevelZenFatigue()
 	{
+		if (!ZenSleepCompatibility.IsZenSleepEnabled() || !GetStatZenFatigue())
+			return EStatLevels.GREAT;
+
 		#ifdef ZenModPack
 		if (!ZenModEnabled("ZenSleep") || !GetStatZenFatigue())
 			return ZenSleepConstants.SL_FATIGUE_HIGH; // To be safe, always return high when not enabled so any debuffs are not applied.
@@ -268,6 +324,10 @@ modded class PlayerBase
 	{
 		float vanillaImmunity = super.GetImmunity();
 
+		// This controls vanilla immunity; Terje's separate internal immunity remains intact.
+		if (!ZenSleepCompatibility.IsZenSleepEnabled())
+			return vanillaImmunity;
+
 		#ifdef ZenModPack
 		if (!ZenModEnabled("ZenSleep"))
 		{
@@ -277,7 +337,7 @@ modded class PlayerBase
 
 		float immunity = vanillaImmunity;
 
-		if (GetStatLevelZenFatigue() >= GetZenSleepConfig().GeneralConfig.FatigueLevelToNegativeImpactImmunity)
+		if (GetStatLevelZenFatigue() >= GetZenSleepConfig().GeneralSleepConfig.FatigueLevelToNegativeImpactImmunity)
 		{
 			if (GetPlayerStats()) 
 			{
@@ -311,13 +371,26 @@ modded class PlayerBase
 		switch (rpc_type)
 		{
 			// We use 1 integer to sync all values, as they will often require sync at the same time anyway.
+			case ZenSleepEnums.RPC_VEHICLE_SLEEP_WAKE:
+			{
+				// Only the owning connection can request a state change for this player.
+				if (g_Game.IsServer() && sender && GetIdentity() && sender.GetId() == GetIdentity().GetId() && GetZenSleepManager())
+				{
+					int vehicleRequestID;
+					if (ctx.Read(vehicleRequestID))
+						GetZenSleepManager().HandleVehicleSleepRequest(false, vehicleRequestID);
+				}
+				break;
+			}
 			case ZenSleepEnums.RPC_SLEEP_STAT_UPDATE:
 			{
-				if (GetZenSleepManager())
+				if (g_Game.IsClient() && IsControlledPlayer() && GetZenSleepManager())
 				{
 					int data4;
-					ctx.Read(data4);
-					GetZenSleepManager().DoClientFromServerSync(data4);
+					bool vehicleSleep;
+					int requestID;
+					if (ctx.Read(data4) && ctx.Read(vehicleSleep) && ctx.Read(requestID))
+						GetZenSleepManager().DoClientFromServerSync(data4, vehicleSleep, requestID);
 				}
 				break;
 			}

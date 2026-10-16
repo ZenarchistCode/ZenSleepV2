@@ -64,6 +64,59 @@ This mod requires Community Framework to function (https://steamcommunity.com/wo
 
 There is an optional persistence-related PBO file in the "ZenSleep/extras/defines" mod folder (for advanced server admins/modders only) - a readme file is included in that folder to explain what it does.
 
+[h1]Sleeping in vehicles:[/h1]
+
+Press Z while fully seated to begin sleeping. Rebind "Sleep / wake up in vehicle" under Controls > ZEN if desired. Passengers may sleep while travelling. Drivers may sleep while the vehicle is stopped or moving at no more than 1 km/h, even if its engine is running. Moving above 1 km/h prevents starting sleep and wakes an already sleeping driver. This small tolerance ignores parked-car physics jitter. The eye-closing effect begins immediately when the sleep action starts, while fatigue recovery still waits for the normal five-second delay. Waking fades the eyes open as with normal sleep. Configured restrictions, sounds and visual effects still apply; no lie-down emote is played and the seat does not grant bed bonuses.
+
+Press the sleep key again or another keyboard key to wake, except for the inventory open/close binding and inventory controls while inventory is open. Mouse clicks and movement do not wake you. Opening menus, showing the cursor or changing window focus does not automatically cancel sleep. Damage (including health, blood or shock lost in a crash), unconsciousness, death, leaving the vehicle or changing seats cancels vehicle sleep. Waking from a crash never removes normal unconsciousness.
+
+The setting in profiles/Zenarchist/ZenSleepConfig.json is inside GeneralSleepConfig:
+
+"GeneralSleepConfig": {
+    "AllowVehicleSleep": true,
+    ...
+}
+
+Set it to false to disable vehicle sleep, then restart the server and reconnect clients. It is enabled by default, including when upgrading an older config that omits the setting. The server enforces and explicitly synchronizes this GeneralSleepConfig option to clients. The earlier top-level AllowVehicleSleep value is migrated automatically, preserving false. The new GeneralSleepConfig value takes priority if both exist. With TerjeMedicine installed this feature follows the existing OverrideTerje selector, so ZenSleep must control sleeping for it to be available.
+
+The rebindable UAZenSleepVehicle input is registered by ZenSleep's CfgMods inputs declaration. It can coexist with ZenModPack's own input XML. Both server and client must load the updated scripts. The sleep action is ActionZenSleepInVehicle with its own ZenSleepVehicleActionInput; rejection messages use the same server checks and DisplaySleepMessages option as normal sleep.
+
+[h1]Optional Terje compatibility:[/h1]
+
+Load ZenSleep after Terje's mods on both server and client. Terje is optional; ZenSleep still works with only its normal dependencies.
+
+In profiles/Zenarchist/ZenSleepConfig.json, set the TOP-LEVEL setting:
+
+"OverrideTerje": true
+
+Restart the server and reconnect clients after changing the selector. The server synchronizes this setting with ZenSleep's client effects; clients do not choose their own sleep system.
+
+- Without TerjeMedicine: ZenSleep works normally and ignores OverrideTerje.
+- With TerjeMedicine and OverrideTerje=true: ZenSleep controls sleep, its moon HUD, sounds, closed eyes, blur, hallucinations, audio attenuation, beds and environmental restrictions. Terje's native sleep loop and sleep-only presentation are suppressed.
+- With TerjeMedicine and OverrideTerje=false (or the setting omitted): Terje controls sleeping. ZenSleep's fatigue loop, sleep effects and fatigue debuffs are inactive. The default is false so installing this update does not silently take over Terje.
+
+Leave Medicine.SleepingEnabled=true in TerjeSettings/Medicine.cfg if you want to swap systems using only OverrideTerje. The ZenSleep override ALSO works when Medicine.SleepingEnabled=false: it keeps Terje's sleep-stat/medicine APIs active while replacing its sleep loop. If both OverrideTerje and Medicine.SleepingEnabled are false, neither sleep system runs. Do not unload TerjeMedicine to select ZenSleep; the medical APIs and items are still needed.
+
+The shared rest value uses Terje's persisted sleep record while the override is enabled. ZenSleep's 0-5000 scale and Terje's 0-14000 scale represent the same percentage. Terje medicines, energy drinks, sleep-damaging items/attacks, admin stat setters and start-screen presets therefore affect ZenSleep immediately. Existing Terje rest and medicine timers are retained. Zen's serialized fatigue slot is kept and saved as a matching cache; its format is unchanged.
+
+[b]Configuration priority when OverrideTerje=true:[/b]
+
+- ZenSleepConfig.json wins wherever both mods control the same sleep behaviour, including explicit zero/false values. Terje supplies additional mechanics without a direct Zen equivalent. This priority only applies with the override enabled; standalone ZenSleep and Terje with the override off retain their existing behaviour.
+- Zen's SecondsAsleepUntilFullRestApprox recovery curve, GlobalGainMultiplier and all night/bed/shelter/heat bonuses control sleep recovery. Zen's GlobalDrainMultiplier, movement, weight, heavy-item and night settings control awake drain. These replace SleepingIncCommon, SleepingIncComfort and SleepingDecPerSecCommon; no second Terje baseline drain is subtracted while sleeping.
+- The moon and its arrows use Zen's fatigue scale and configured gain/drain calculation. With the default Zen drain settings, standing still produces one down arrow, including at night with DrainNightMultiplier=1.5. Medicine and activity can still legitimately change the tendency.
+- The current Fast Sleep perk (immunity/fsleep) multiplies Zen recovery by 1 + the player's live perk value, including customized perk values and eligibility rules. TerjeSkills is not required; without it the multiplier is 1.
+- Zen's MaxRestGain_Illness remains active for its normal sickness check. Terje's SleepingBlockWithWounds adds its separate serious illness/injury restriction through HasTerjeSicknesOrInjures. This includes sepsis levels 2 and 3, severe pain, wounds and Terje's other critical conditions. A blocker prevents starting sleep and invalidates existing sleep immediately. Beds do not bypass this check.
+- Zen's MaxFatiguePercentToAllowSleeping controls starting sleep; it does not stop an already sleeping player from recovering above that percentage. Zen's day/night, temperature, wetness and food/water caps control waking. These take priority over SleepingBlockOnFull and SleepingAwakeOnFull.
+- Zen's PercentGainedUponUncon controls its existing rest award on waking from unconsciousness at low fatigue. It replaces SleepingIncUnconscin; there is no additional continuous Terje unconscious recovery. Zen's unconsciousness chances, intervals and driving/swimming restrictions control sleep-induced blackouts; Terje's unconditional sleep shock threshold is suppressed.
+- In a dry bed, Zen's BedHealthGainPerSec, gain modifiers, BedHealthMaxGain and MinSecsAsleepToTriggerHealthRecovery control healing, applied once through Terje's health API. Zero Zen bed healing stays zero. Outside a dry bed, SleepingHealthInc still applies because Zen has no non-bed healing setting. SleepingBloodInc and SleepingMindInc remain active while genuinely asleep because Zen has no corresponding settings.
+- Zen's configured bed immunity threshold grants Terje's vitamin-equivalent immunity gain for at least the vanilla vitamin lifetime, retaining stronger or longer existing medicine. FatigueLevelToNegativeImpactImmunity controls Zen's vanilla immunity adjustment; Terje's separate internal immunity and skills remain intact.
+- Zen's HealthLossPerSecRedFlashing replaces SleepingHealthDec, including zero. SleepingBloodDec and SleepingMindDec retain their Terje rates and critical threshold. Godmode prevents this exhaustion damage. Zen's CharacterMovementSpeedRed/RedFlashing control the sleep limp; Terje's other injury/disease movement effects remain active. Zen's stamina settings remain active.
+- For items matched by Zen's ModifierActivatedPercent, ModifierDeactivatedPercent or ModifierPausesSeconds (including inherited class matches and explicit zero entries), Zen's configured sleep effects take priority. Only that item's competing Terje sleep dose is suppressed; overdose, skill processing and other medical effects remain. Items without a matching Zen entry use Terje's dose, duration and stacking rules. Already-active Terje medicine timers are retained and consume their actual remaining duration, including partial ticks. Modifier-name entries still follow their normal modifier activation/deactivation events.
+- Terje sleeping bags retain their use/pack actions and are recognized as Zen beds when deployed and usable. Medicine.EnableSleepingbagAction=false also disables Zen's duplicate sleep action on Terje bags, since Zen has no corresponding action toggle. Zen bags and configured bed objects retain Zen's bed bonuses.
+- Zen's snore chance/timing settings take priority over SleepingUseSnore. Zen's moon, sounds, closed eyes, blur, hallucinations and audio attenuation replace Terje's sleep presentation; other medical effects and HUD indicators remain active.
+
+Compatibility was audited against TerjeMods upstream commit 08208ffe75783207281dbc40ba4f4d6970cb8cb3 (https://github.com/TerjeBruoygard/TerjeMods). Future Terje sleep API changes may require updating this adapter. Custom code edits inside a private Terje sleep modifier are replaced when ZenSleep takes over; express the desired bed/environment behaviour in ZenSleep's JSON.
+
 [h1]Credit:[/h1]
 
 Obviously the original sleeping mod included in Medical Attention is a huge inspiration for this mod: https://steamcommunity.com/sharedfiles/filedetails/?id=2293429999

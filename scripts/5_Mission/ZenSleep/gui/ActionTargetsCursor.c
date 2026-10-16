@@ -1,9 +1,9 @@
 // Hide nearby target object UI while lying down
 modded class ActionTargetsCursor
 {
-	override void Update()
+	override void Update(bool fullUpdate = true)
 	{
-		super.Update();
+		super.Update(fullUpdate);
 
 		#ifdef ZenModPack
 		if (!ZenModEnabled("ZenSleep"))
